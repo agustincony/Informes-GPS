@@ -268,6 +268,10 @@ function setFecha(key,el){
   document.querySelectorAll('#team-tabs .ftab').forEach((b,i)=>{b.classList.remove('ap','ai','aa');if(i===1)b.classList.add('ap');});
   document.querySelectorAll('#group-tabs .ptab').forEach((b,i)=>b.classList.toggle('active',i===0));
   document.querySelectorAll('#sort-tabs .ptab').forEach((b,i)=>b.classList.toggle('active',i===0));
+  // Actualizar score según equipo activo
+  const sc=getScores()[activeTeam]||getScores().total;
+  document.getElementById('hdr-score').innerHTML=`${sc.casi}<span class="sep">–</span>${sc.rival}`;
+  document.getElementById('hdr-label').innerHTML=sc.label?`<b>${sc.label}</b>`:'&nbsp;';
   if(DB_F19.total.length===0&&key==='f19'){document.getElementById('mc').innerHTML='<div style="padding:32px;text-align:center;font-family:var(--fbc);color:#aaa;font-size:13px;">Datos de Fecha 19 aún no cargados.</div>';return;}
   render();
 }
