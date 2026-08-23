@@ -897,6 +897,12 @@ function render(){
 }
 
 render();
+// Inicializar score del header según equipo y fecha por defecto
+(function(){
+  const s=getScores()[activeTeam]||getScores().total;
+  document.getElementById('hdr-score').innerHTML=`${s.casi}<span class="sep">–</span>${s.rival}`;
+  document.getElementById('hdr-label').innerHTML=s.label?`<b>${s.label}</b>`:'&nbsp;';
+})();
 </script>
 </body>
 </html>
