@@ -169,7 +169,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
   <div class="hdr-info">
     <h1 id="hdr-title">CASI vs Matreros</h1>
     <div class="fecha-dd" id="fecha-dd">
-      <p id="hdr-sub" onclick="toggleFechaDD()" style="cursor:pointer;user-select:none">FECHA 19 · TOP 14 URBA 2026 · VISITA ▾</p>
+      <p id="hdr-sub" onclick="toggleFechaDD()" style="cursor:pointer;user-select:none">FECHA 20 · TOP 14 URBA 2026 · LOCAL ▾</p>
       <div class="fecha-opts" id="fecha-opts">
         <div onclick="selectFecha('f18')">F18 — Atlético del Rosario</div>
         <div onclick="selectFecha('f19')">F19 — Los Tilos</div>
@@ -351,6 +351,9 @@ function byGroup(arr,key,asc=false){
 
 function setTeam(t,el){
   activeTeam=t;
+  activeGrps=new Set(['all']);
+  document.querySelectorAll('#group-tabs .ptab').forEach(b=>b.classList.remove('active'));
+  document.querySelector('#group-tabs .ptab').classList.add('active');
   document.querySelectorAll('#team-tabs .ftab').forEach(b=>b.classList.remove('ap','ai','aa'));
   el.classList.add(t==='total'||t==='Primera'?'ap':t==='Intermedia'?'ai':'aa');
   const s=getScores()[t]||getScores().total;
