@@ -44,7 +44,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
 .hb-score{font-family:var(--fbc);font-size:24px;font-weight:900;line-height:1;color:var(--fg)}
 .hb-score .sep{color:var(--cel)}
 .hb-label{font-size:9px;color:#aaa;font-family:var(--fbc)}
-.hb-label b{color:var(--win)}
+.hb-label b.win{color:var(--win)}.hb-label b.loss{color:#C62828}
 .flt{background:#fff;border-bottom:2px solid var(--bord);padding:6px 10px;display:flex;flex-direction:column;gap:5px;position:sticky;top:60px;z-index:59;box-shadow:0 1px 4px rgba(0,0,0,.05)}
 .flt-lbl{font-family:var(--fbc);font-size:9px;color:#aaa;font-weight:700;letter-spacing:.8px;margin-bottom:2px}
 .flt-row{display:flex;gap:4px}
@@ -171,11 +171,27 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
     <div class="fecha-dd" id="fecha-dd">
       <p id="hdr-sub" onclick="toggleFechaDD()" style="cursor:pointer;user-select:none">FECHA 19 · TOP 14 URBA 2026 · VISITA ▾</p>
       <div class="fecha-opts" id="fecha-opts">
-        <div onclick="selectFecha('f17')">F17 — Regatas</div>
-        <div onclick="selectFecha('f18')">F18 — Atlético del Rosario</div>
-        <div onclick="selectFecha('f19')">F19 — Los Tilos</div>
-        <div onclick="selectFecha('f20')">F20 — Matreros</div>
         <div onclick="selectFecha('f21')">F21 — Cuba</div>
+        <div onclick="selectFecha('f20')">F20 — Matreros</div>
+        <div onclick="selectFecha('f19')">F19 — Los Tilos</div>
+        <div onclick="selectFecha('f18')">F18 — Atlético del Rosario</div>
+        <div onclick="selectFecha('f17')">F17 — Regatas</div>
+        <div onclick="selectFecha('f16')">F16 — La Plata</div>
+        <div onclick="selectFecha('f15')">F15 — Hindú</div>
+        <div onclick="selectFecha('f14')">F14 — Champagnat</div>
+        <div onclick="selectFecha('f13')">F13 — Alumni</div>
+        <div onclick="selectFecha('f12')">F12 — Newman</div>
+        <div onclick="selectFecha('f11')">F11 — SIC</div>
+        <div onclick="selectFecha('f10')">F10 — Belgrano</div>
+        <div onclick="selectFecha('f9')">F9 — Biei</div>
+        <div onclick="selectFecha('f8')">F8 — Cuba</div>
+        <div onclick="selectFecha('f7')">F7 — Matreros</div>
+        <div onclick="selectFecha('f6')">F6 — Los Tilos</div>
+        <div onclick="selectFecha('f5')">F5 — Atlético del Rosario</div>
+        <div onclick="selectFecha('f4')">F4 — Regatas</div>
+        <div onclick="selectFecha('f3')">F3 — La Plata</div>
+        <div onclick="selectFecha('f2')">F2 — Hindú</div>
+        <div onclick="selectFecha('f1')">F1 — Champagnat</div>
       </div>
     </div>
   </div>
@@ -229,6 +245,22 @@ const FECHAS_CONFIG = [
   { key: 'f19', file: 'f19.json' },
   { key: 'f18', file: 'f18.json' },
   { key: 'f17', file: 'f17.json' },
+  { key: 'f16', file: 'f16.json' },
+  { key: 'f15', file: 'f15.json' },
+  { key: 'f14', file: 'f14.json' },
+  { key: 'f13', file: 'f13.json' },
+  { key: 'f12', file: 'f12.json' },
+  { key: 'f11', file: 'f11.json' },
+  { key: 'f10', file: 'f10.json' },
+  { key: 'f9',  file: 'f9.json'  },
+  { key: 'f8',  file: 'f8.json'  },
+  { key: 'f7',  file: 'f7.json'  },
+  { key: 'f6',  file: 'f6.json'  },
+  { key: 'f5',  file: 'f5.json'  },
+  { key: 'f4',  file: 'f4.json'  },
+  { key: 'f3',  file: 'f3.json'  },
+  { key: 'f2',  file: 'f2.json'  },
+  { key: 'f1',  file: 'f1.json'  },
 ];
 
 // Caché de datos ya cargados
@@ -308,7 +340,7 @@ async function setFecha(key,el){
   document.querySelectorAll('#sort-tabs .ptab').forEach((b,i)=>b.classList.toggle('active',i===0));
   const sc=getScores()[activeTeam]||getScores().total||{};
   document.getElementById('hdr-score').innerHTML=(sc.casi!==undefined?sc.casi:'–')+'<span class="sep">–</span>'+(sc.rival!==undefined?sc.rival:'–');
-  document.getElementById('hdr-label').innerHTML=sc.label?'<b>'+sc.label+'</b>':'&nbsp;';
+  document.getElementById('hdr-label').innerHTML=sc.label?'<b class="'+(sc.label==='DERROTA'?'loss':'win')+'">'+sc.label+'</b>':'&nbsp;';
   render();
 }
 
@@ -380,7 +412,7 @@ function setTeam(t,el){
   el.classList.add(t==='total'||t==='Primera'?'ap':t==='Intermedia'?'ai':'aa');
   const s=getScores()[t]||getScores().total;
   document.getElementById('hdr-score').innerHTML=t==='total'?'':`${s.casi}<span class="sep">–</span>${s.rival}`;
-  document.getElementById('hdr-label').innerHTML=s.label?`<b>${s.label}</b>`:'&nbsp;';
+  document.getElementById('hdr-label').innerHTML=s.label?`<b class="${s.label==='DERROTA'?'loss':'win'}">${s.label}</b>`:'&nbsp;';
   render();
 }
 
@@ -974,7 +1006,7 @@ function render(){
     document.getElementById('footer-txt').textContent=m.footer;
     const sc=getScores()['Primera']||{};
     document.getElementById('hdr-score').innerHTML=(sc.casi!==undefined?sc.casi:'–')+'<span class="sep">–</span>'+(sc.rival!==undefined?sc.rival:'–');
-    document.getElementById('hdr-label').innerHTML=sc.label?'<b>'+sc.label+'</b>':'&nbsp;';
+    document.getElementById('hdr-label').innerHTML=sc.label?'<b class="'+(sc.label==='DERROTA'?'loss':'win')+'">'+sc.label+'</b>':'&nbsp;';
     render();
     overlay.remove();
   } catch(e) {
