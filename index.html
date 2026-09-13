@@ -171,6 +171,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
     <div class="fecha-dd" id="fecha-dd">
       <p id="hdr-sub" onclick="toggleFechaDD()" style="cursor:pointer;user-select:none">FECHA 19 · TOP 14 URBA 2026 · VISITA ▾</p>
       <div class="fecha-opts" id="fecha-opts">
+        <div onclick="selectFecha('f22')">F22 — Biei</div>
         <div onclick="selectFecha('f21')">F21 — Cuba</div>
         <div onclick="selectFecha('f20')">F20 — Matreros</div>
         <div onclick="selectFecha('f19')">F19 — Los Tilos</div>
@@ -240,6 +241,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
 // ── Configuración de fechas disponibles ──────────────────────────────────────
 const BASE_URL = 'https://raw.githubusercontent.com/agustincony/Informes-GPS/main/datos';
 const FECHAS_CONFIG = [
+  { key: 'f22', file: 'f22.json' },
   { key: 'f21', file: 'f21.json' },
   { key: 'f20', file: 'f20.json' },
   { key: 'f19', file: 'f19.json' },
@@ -345,7 +347,7 @@ async function setFecha(key,el){
 }
 
 // DB se asigna dinámicamente
-let activeFecha='f21';
+let activeFecha=FECHAS_CONFIG[0].key;
 let activeTeam='Primera', activeGrps=new Set(['all']);
 let sortMode='group';
 let velMode='abs';
@@ -996,11 +998,12 @@ function render(){
   style.textContent='@keyframes spin{to{transform:rotate(360deg)}}';
   document.head.appendChild(style);
   try {
-    const data = await fetchFecha('f21');
-    buildFechaMeta('f21', data);
-    DB = FECHA_META['f21'].db;
-    activeFecha = 'f21';
-    const m = FECHA_META['f21'];
+    const defaultKey = FECHAS_CONFIG[0].key;
+    const data = await fetchFecha(defaultKey);
+    buildFechaMeta(defaultKey, data);
+    DB = FECHA_META[defaultKey].db;
+    activeFecha = defaultKey;
+    const m = FECHA_META[defaultKey];
     document.getElementById('hdr-title').textContent=m.titulo;
     document.getElementById('hdr-sub').textContent=m.subtitulo+' ▾';
     document.getElementById('footer-txt').textContent=m.footer;
