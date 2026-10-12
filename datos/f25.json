@@ -1,20 +1,25 @@
 {
   "fecha": 25,
-  "rival": "Newman",
-  "condicion": "Local",
-  "fecha_partido": "2026-10-10",
   "scores": {
+    "total": {
+      "casi": "—",
+      "rival": "—",
+      "label": ""
+    },
     "Primera": {
       "casi": 27,
-      "rival": 37
+      "rival": 37,
+      "label": "DERROTA"
     },
     "Intermedia": {
       "casi": 44,
-      "rival": 24
+      "rival": 24,
+      "label": "VICTORIA"
     },
     "Pre A": {
       "casi": 14,
-      "rival": 16
+      "rival": 16,
+      "label": "DERROTA"
     }
   },
   "players": {
@@ -3813,5 +3818,8 @@
         ]
       }
     ]
-  }
+  },
+  "titulo": "CASI vs Newman",
+  "subtitulo": "FECHA 25 · TOP 14 URBA 2026 · LOCAL",
+  "footer": "CASI · Fecha 25 vs Newman · 10 octubre 2026 · PF Agustín Cony"
 }
