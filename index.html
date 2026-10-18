@@ -171,6 +171,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
     <div class="fecha-dd" id="fecha-dd">
       <p id="hdr-sub" onclick="toggleFechaDD()" style="cursor:pointer;user-select:none">FECHA 19 · TOP 14 URBA 2026 · VISITA ▾</p>
       <div class="fecha-opts" id="fecha-opts">
+        <div onclick="selectFecha('f26')">F26 — Alumni</div>
         <div onclick="selectFecha('f25')">F25 — Newman</div>
         <div onclick="selectFecha('f24')">F24 — SIC</div>
         <div onclick="selectFecha('f23')">F23 — Belgrano</div>
@@ -244,6 +245,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
 // ── Configuración de fechas disponibles ──────────────────────────────────────
 const BASE_URL = 'https://raw.githubusercontent.com/agustincony/Informes-GPS/main/datos';
 const FECHAS_CONFIG = [
+  { key: 'f26', file: 'f26.json' },
   { key: 'f25', file: 'f25.json' },
   { key: 'f24', file: 'f24.json' },
   { key: 'f23', file: 'f23.json' },
