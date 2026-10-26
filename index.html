@@ -346,8 +346,8 @@ async function setFecha(key,el){
   document.getElementById('hdr-sub').textContent=m.subtitulo+' ▾';
   document.querySelectorAll('#fecha-opts div').forEach(d=>d.classList.toggle('active',d.getAttribute('onclick').includes("'"+key+"'")));
   document.getElementById('footer-txt').textContent=m.footer;
-  activeTeam='Primera';activeGrps=new Set(['all']);sortMode='group';
-  document.querySelectorAll('#team-tabs .ftab').forEach((b,i)=>{b.classList.remove('ap','ai','aa');if(i===1)b.classList.add('ap');});
+  activeTeam=(['Primera','Intermedia','Pre A'].find(t=>DB[t]&&DB[t].length)||'Primera');activeGrps=new Set(['all']);sortMode='group';
+  document.querySelectorAll('#team-tabs .ftab').forEach((b,i)=>{b.classList.remove('ap','ai','aa');const tmap=['total','Primera','Intermedia','Pre A'];if(tmap[i]===activeTeam)b.classList.add(activeTeam==='Primera'?'ap':activeTeam==='Intermedia'?'ai':'aa');});
   document.querySelectorAll('#group-tabs .ptab').forEach((b,i)=>b.classList.toggle('active',i===0));
   document.querySelectorAll('#sort-tabs .ptab').forEach((b,i)=>b.classList.toggle('active',i===0));
   const sc=getScores()[activeTeam]||getScores().total||{};
