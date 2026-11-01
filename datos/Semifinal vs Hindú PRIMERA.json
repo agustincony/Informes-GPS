@@ -28,7 +28,7 @@
     "total": [
       {
         "name": "Juan Franco Akemeier",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Full Back",
         "tag": "Backs11",
         "jersey": "JAk",
@@ -64,7 +64,7 @@
       },
       {
         "name": "Juan Ignacio Albareda",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Hooker",
         "tag": "Fowards11",
         "jersey": "JAb",
@@ -100,7 +100,7 @@
       },
       {
         "name": "Benjamin Belaga",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Centro",
         "tag": "Backs11",
         "jersey": "BBg",
@@ -136,7 +136,7 @@
       },
       {
         "name": "Luis Briatore",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Octavo",
         "tag": "Fowards11",
         "jersey": "LB",
@@ -172,7 +172,7 @@
       },
       {
         "name": "Santiago David",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Wing",
         "tag": "Backs11",
         "jersey": "SD",
@@ -208,7 +208,7 @@
       },
       {
         "name": "Joaquin Dominguez Perdigón",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Pilar derecho",
         "tag": "Fowards11",
         "jersey": "JDP",
@@ -244,7 +244,7 @@
       },
       {
         "name": "Hugo Garcia",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Pilar derecho",
         "tag": "Fowards11",
         "jersey": "HGa",
@@ -280,7 +280,7 @@
       },
       {
         "name": "Felipe Hileman",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Apertura",
         "tag": "Backs11",
         "jersey": "FH",
@@ -316,7 +316,7 @@
       },
       {
         "name": "Ignacio Larrague",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Segunda Linea",
         "tag": "Fowards11",
         "jersey": "IL",
@@ -352,7 +352,7 @@
       },
       {
         "name": "Alejo Lavayen",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Medio Scrum",
         "tag": "Backs11",
         "jersey": "ALy",
@@ -388,7 +388,7 @@
       },
       {
         "name": "Leo Mazzini",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Segunda Linea",
         "tag": "Fowards11",
         "jersey": "LMz",
@@ -424,7 +424,7 @@
       },
       {
         "name": "Salvador Ochoa",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Segunda Linea",
         "tag": "Fowards11",
         "jersey": "SO",
@@ -460,7 +460,7 @@
       },
       {
         "name": "Felix Paolucci",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Pilar derecho",
         "tag": "Fowards11",
         "jersey": "FP",
@@ -496,7 +496,7 @@
       },
       {
         "name": "Tomas Phelan",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Wing",
         "tag": "Backs11",
         "jersey": "TPh",
@@ -532,7 +532,7 @@
       },
       {
         "name": "Eliseo Roger",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Medio Scrum",
         "tag": "Backs11",
         "jersey": "ERg",
@@ -568,7 +568,7 @@
       },
       {
         "name": "Joaquin Saenz de Miera",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Ala",
         "tag": "Fowards11",
         "jersey": "JSM",
@@ -604,7 +604,7 @@
       },
       {
         "name": "Joaquin Sanchez",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Medio Scrum",
         "tag": "Backs11",
         "jersey": "JSz",
@@ -640,7 +640,7 @@
       },
       {
         "name": "Eugenio Sartori",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Ala",
         "tag": "Fowards11",
         "jersey": "ES",
@@ -676,7 +676,7 @@
       },
       {
         "name": "Facundo Scaiano",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Pilar izquiero",
         "tag": "Fowards11",
         "jersey": "FSc",
@@ -712,7 +712,7 @@
       },
       {
         "name": "Ignacio Torrado",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Ala",
         "tag": "Fowards11",
         "jersey": "IT",
@@ -748,7 +748,7 @@
       },
       {
         "name": "Juan Bautista Torres Obeid",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Hooker",
         "tag": "Fowards11",
         "jersey": "JTO",
@@ -786,7 +786,7 @@
     "Primera": [
       {
         "name": "Juan Franco Akemeier",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Full Back",
         "tag": "Backs11",
         "jersey": "JAk",
@@ -822,7 +822,7 @@
       },
       {
         "name": "Juan Ignacio Albareda",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Hooker",
         "tag": "Fowards11",
         "jersey": "JAb",
@@ -858,7 +858,7 @@
       },
       {
         "name": "Benjamin Belaga",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Centro",
         "tag": "Backs11",
         "jersey": "BBg",
@@ -894,7 +894,7 @@
       },
       {
         "name": "Luis Briatore",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Octavo",
         "tag": "Fowards11",
         "jersey": "LB",
@@ -930,7 +930,7 @@
       },
       {
         "name": "Santiago David",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Wing",
         "tag": "Backs11",
         "jersey": "SD",
@@ -966,7 +966,7 @@
       },
       {
         "name": "Joaquin Dominguez Perdigón",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Pilar derecho",
         "tag": "Fowards11",
         "jersey": "JDP",
@@ -1002,7 +1002,7 @@
       },
       {
         "name": "Hugo Garcia",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Pilar derecho",
         "tag": "Fowards11",
         "jersey": "HGa",
@@ -1038,7 +1038,7 @@
       },
       {
         "name": "Felipe Hileman",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Apertura",
         "tag": "Backs11",
         "jersey": "FH",
@@ -1074,7 +1074,7 @@
       },
       {
         "name": "Ignacio Larrague",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Segunda Linea",
         "tag": "Fowards11",
         "jersey": "IL",
@@ -1110,7 +1110,7 @@
       },
       {
         "name": "Alejo Lavayen",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Medio Scrum",
         "tag": "Backs11",
         "jersey": "ALy",
@@ -1146,7 +1146,7 @@
       },
       {
         "name": "Leo Mazzini",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Segunda Linea",
         "tag": "Fowards11",
         "jersey": "LMz",
@@ -1182,7 +1182,7 @@
       },
       {
         "name": "Salvador Ochoa",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Segunda Linea",
         "tag": "Fowards11",
         "jersey": "SO",
@@ -1218,7 +1218,7 @@
       },
       {
         "name": "Felix Paolucci",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Pilar derecho",
         "tag": "Fowards11",
         "jersey": "FP",
@@ -1254,7 +1254,7 @@
       },
       {
         "name": "Tomas Phelan",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Wing",
         "tag": "Backs11",
         "jersey": "TPh",
@@ -1290,7 +1290,7 @@
       },
       {
         "name": "Eliseo Roger",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Medio Scrum",
         "tag": "Backs11",
         "jersey": "ERg",
@@ -1326,7 +1326,7 @@
       },
       {
         "name": "Joaquin Saenz de Miera",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Ala",
         "tag": "Fowards11",
         "jersey": "JSM",
@@ -1362,7 +1362,7 @@
       },
       {
         "name": "Joaquin Sanchez",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Medio Scrum",
         "tag": "Backs11",
         "jersey": "JSz",
@@ -1398,7 +1398,7 @@
       },
       {
         "name": "Eugenio Sartori",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Ala",
         "tag": "Fowards11",
         "jersey": "ES",
@@ -1434,7 +1434,7 @@
       },
       {
         "name": "Facundo Scaiano",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Pilar izquiero",
         "tag": "Fowards11",
         "jersey": "FSc",
@@ -1470,7 +1470,7 @@
       },
       {
         "name": "Ignacio Torrado",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Ala",
         "tag": "Fowards11",
         "jersey": "IT",
@@ -1506,7 +1506,7 @@
       },
       {
         "name": "Juan Bautista Torres Obeid",
-        "team": "CASI",
+        "team": "Primera",
         "position": "Hooker",
         "tag": "Fowards11",
         "jersey": "JTO",
