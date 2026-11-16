@@ -81,7 +81,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
 /* dropdown fecha */
 .fecha-dd{position:relative}
 .fecha-dd p{font-size:10px;color:var(--cel);font-family:var(--fbc);font-weight:600;letter-spacing:.5px;margin:0}
-.fecha-opts{display:none;position:absolute;top:100%;left:0;background:#fff;border:1px solid var(--bord);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.12);z-index:100;min-width:200px;overflow:hidden}
+.fecha-opts{display:none;position:fixed;background:#fff;border:1px solid var(--bord);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.12);z-index:9999;min-width:200px;overflow-y:auto;max-height:260px;-webkit-overflow-scrolling:touch}
 .fecha-opts div{padding:8px 12px;font-family:var(--fbc);font-size:12px;font-weight:600;color:var(--fg);cursor:pointer}
 .fecha-opts div:hover{background:var(--bg3)}
 .fecha-opts div.active{color:var(--cel)}
@@ -171,6 +171,7 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
     <div class="fecha-dd" id="fecha-dd">
       <p id="hdr-sub" onclick="toggleFechaDD()" style="cursor:pointer;user-select:none">FECHA 19 · TOP 14 URBA 2026 · VISITA ▾</p>
       <div class="fecha-opts" id="fecha-opts">
+        <div onclick="selectFecha('final-intermedia-sic')">Final — SIC (INTERMEDIA)</div>
         <div onclick="selectFecha('semifinal-primera-hindu')">Semifinal — Hindú (PRIMERA)</div>
         <div onclick="selectFecha('semi')">Semifinal — Intermedia vs Alumni / Pre A vs Newman</div>
         <div onclick="selectFecha('f26')">F26 — Alumni</div>
@@ -247,7 +248,8 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
 // ── Configuración de fechas disponibles ──────────────────────────────────────
 const BASE_URL = 'https://raw.githubusercontent.com/agustincony/Informes-GPS/main/datos';
 const FECHAS_CONFIG = [
-  { key: 'semifinal-primera-hindu', file: 'semifinal-primera-vs-hindu.json' },
+  { key: 'final-intermedia-sic', file: 'final-intermedia-vs-sic.json' },
+  { key: 'semifinal-primera-hindu', file: 'Semifinal vs Hindú PRIMERA.json' },
   { key: 'semi', file: 'semifinales-inter y pre a.json' },
   { key: 'f26', file: 'f26.json' },
   { key: 'f25', file: 'f25.json' },
@@ -318,7 +320,13 @@ function getScores() {
 
 function toggleFechaDD(){
   const opts=document.getElementById('fecha-opts');
-  opts.style.display=opts.style.display==='block'?'none':'block';
+  if(opts.style.display==='block'){opts.style.display='none';return;}
+  const trigger=document.getElementById('hdr-sub');
+  const rect=trigger.getBoundingClientRect();
+  opts.style.top=(rect.bottom+4)+'px';
+  opts.style.left=rect.left+'px';
+  opts.style.width=Math.max(rect.width,220)+'px';
+  opts.style.display='block';
 }
 function selectFecha(key){
   document.getElementById('fecha-opts').style.display='none';
@@ -1017,16 +1025,10 @@ function render(){
     DB = FECHA_META[defaultKey].db;
     activeFecha = defaultKey;
     const m = FECHA_META[defaultKey];
-    activeTeam = m.defaultTeam || 'Primera';
-    document.querySelectorAll('#team-tabs .ftab').forEach((b,i)=>{
-      b.classList.remove('ap','ai','aa');
-      const tmap=['total','Primera','Intermedia','Pre A'];
-      if(tmap[i]===activeTeam) b.classList.add(activeTeam==='Primera'?'ap':activeTeam==='Intermedia'?'ai':'aa');
-    });
     document.getElementById('hdr-title').textContent=m.titulo;
     document.getElementById('hdr-sub').textContent=m.subtitulo+' ▾';
     document.getElementById('footer-txt').textContent=m.footer;
-    const sc=getScores()[activeTeam]||getScores().total||{};
+    const sc=getScores()['Primera']||{};
     document.getElementById('hdr-score').innerHTML=(sc.casi!==undefined?sc.casi:'–')+'<span class="sep">–</span>'+(sc.rival!==undefined?sc.rival:'–');
     document.getElementById('hdr-label').innerHTML=sc.label?'<b class="'+(sc.label==='DERROTA'?'loss':'win')+'">'+sc.label+'</b>':'&nbsp;';
     render();
