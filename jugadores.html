@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta property="og:title" content="CASI · Resumen por Jugador 2026">
+<meta property="og:description" content="Resumen anual GPS por jugador · Top 14 URBA 2026">
+<title>CASI · Resumen por Jugador 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F7F7;--fg:#111;--cel:#1A7CC2;
+  --bg2:#fff;--bg3:#EFEFEF;--bg4:#E2E2E2;
+  --bord:#DCDCDC;
+  --gold:#C8960C;--silver:#777;--bronze:#8B4513;
+  --win:#2E7D32;
+  --cp:#1A7CC2;--ci:#C47000;--ca:#3A8A2A;
+  --fbc:"Barlow Condensed",sans-serif;
+  --fb:"Barlow",sans-serif;
+}
+body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;margin:0 auto;min-height:100vh}
+.hdr{background:#fff;border-bottom:3px solid var(--cel);padding:9px 12px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:60;box-shadow:0 2px 6px rgba(0,0,0,.07)}
+.hdr img{height:38px;width:38px;object-fit:contain;flex-shrink:0}
+.hdr-info{flex:1;min-width:0}
+.hdr-info h1{font-family:var(--fbc);font-weight:900;font-size:16px;line-height:1.1;color:var(--fg)}
+.hdr-info p{font-size:10px;color:var(--cel);font-family:var(--fbc);font-weight:600;letter-spacing:.5px}
+.nav-btn{margin-left:auto;flex-shrink:0;background:var(--cel);color:#fff;font-family:var(--fbc);font-weight:700;font-size:11px;border:none;border-radius:16px;padding:7px 12px;cursor:pointer;text-decoration:none;letter-spacing:.3px;white-space:nowrap}
+
+.flt{background:#fff;border-bottom:2px solid var(--bord);padding:6px 10px;display:flex;flex-direction:column;gap:5px;position:sticky;top:60px;z-index:59;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.flt-lbl{font-family:var(--fbc);font-size:9px;color:#aaa;font-weight:700;letter-spacing:.8px;margin-bottom:2px}
+.flt-row{display:flex;gap:4px}
+.ftab{flex:1;padding:5px 2px;text-align:center;font-family:var(--fbc);font-weight:700;font-size:11px;cursor:pointer;border-radius:4px;color:#aaa;background:var(--bg3);border:1px solid var(--bord);transition:all .15s;-webkit-tap-highlight-color:transparent;user-select:none}
+.ftab.ap{color:#fff;background:var(--cp);border-color:var(--cp)}
+.ftab.ai{color:#fff;background:var(--ci);border-color:var(--ci)}
+.ftab.aa{color:#fff;background:var(--ca);border-color:var(--ca)}
+.ftab.at{color:#fff;background:#444;border-color:#444}
+.ftab.dim{opacity:.35;pointer-events:none}
+
+.player-sel-wrap{padding:0;display:flex;flex-direction:column;gap:4px}
+.player-sel-wrap select{font-family:var(--fbc);font-size:14px;font-weight:700;color:var(--fg);background:var(--bg2);border:1px solid var(--bord);border-radius:6px;padding:7px 10px;outline:none;width:100%}
+
+.sec{padding:11px 10px 4px}
+.sec-ttl{font-family:var(--fbc);font-size:11px;font-weight:700;color:#bbb;letter-spacing:1.8px;text-transform:uppercase;margin-bottom:9px;display:flex;align-items:center;gap:7px}
+.sec-ttl::after{content:'';flex:1;height:1px;background:var(--bord)}
+.kpi{background:#fff;border:1px solid var(--bord);border-radius:7px;padding:7px 8px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.kpi-lbl{font-family:var(--fbc);font-size:8px;color:#bbb;font-weight:700;letter-spacing:.5px;white-space:nowrap}
+.kpi-v{font-family:var(--fbc);font-size:19px;font-weight:900;line-height:1.1;color:var(--fg)}
+.kpi-u{font-size:10px;color:#bbb;font-weight:400}
+
+.cso{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;cursor:grab}
+.cso:active{cursor:grabbing}
+.cso svg{display:block}
+
+.chart-toggle{display:flex;gap:4px;margin-bottom:8px}
+.ctab{padding:4px 10px;font-family:var(--fbc);font-weight:700;font-size:11px;cursor:pointer;border-radius:4px;color:#aaa;background:var(--bg3);border:1px solid var(--bord);transition:all .15s;user-select:none;-webkit-tap-highlight-color:transparent}
+.ctab.active{color:#fff;background:var(--cp);border-color:var(--cp)}
+
+.player-meta{display:flex;align-items:center;gap:8px;padding:2px 10px 8px;flex-wrap:wrap}
+.pm-chip{font-family:var(--fbc);font-size:10px;font-weight:700;color:#666;background:var(--bg3);border:1px solid var(--bord);border-radius:12px;padding:3px 9px}
+.pm-chip b{color:var(--fg)}
+
+.footer{text-align:center;padding:16px 10px;font-family:var(--fbc);font-size:10px;color:#ccc;border-top:1px solid var(--bord);margin-top:8px}
+::-webkit-scrollbar{height:3px;width:3px}
+::-webkit-scrollbar-track{background:var(--bg3)}
+::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
+
+#loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:14px;padding:20px;text-align:center}
+#loading-overlay .lo-txt{font-family:var(--fbc);font-size:15px;color:var(--cel);font-weight:700}
+#loading-overlay .lo-sub{font-family:var(--fbc);font-size:12px;color:#aaa}
+#loading-overlay .lo-spin{width:36px;height:36px;border:3px solid var(--bord);border-top-color:var(--cel);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <img id="hdr-logo" alt="CASI">
+  <div class="hdr-info">
+    <h1>Resumen por Jugador</h1>
+    <p>GPS · TOP 14 URBA 2026</p>
+  </div>
+  <a class="nav-btn" href="index.html">Ver por fecha ▸</a>
+</div>
+
+<div class="flt">
+  <div>
+    <div class="flt-lbl">EQUIPO</div>
+    <div class="flt-row" id="team-tabs">
+      <div class="ftab at" data-team="total" onclick="setTeam('total',this)">TOTAL</div>
+      <div class="ftab" data-team="Primera" onclick="setTeam('Primera',this)">PRIMERA</div>
+      <div class="ftab" data-team="Intermedia" onclick="setTeam('Intermedia',this)">INTERMEDIA</div>
+      <div class="ftab" data-team="Pre A" onclick="setTeam('Pre A',this)">PRE A</div>
+    </div>
+  </div>
+  <div>
+    <div class="flt-lbl">JUGADOR</div>
+    <div class="player-sel-wrap">
+      <select id="player-select" onchange="selectPlayer(this.value)"></select>
+    </div>
+  </div>
+</div>
+
+<div class="player-meta" id="player-meta"></div>
+<div id="mc"></div>
+<div class="footer">CASI · Resumen anual GPS 2026 · PF Agustín Cony</div>
+
+<div id="loading-overlay">
+  <div class="lo-txt">Cargando temporada…</div>
+  <div class="lo-spin"></div>
+  <div class="lo-sub">Puede tardar unos segundos la primera vez</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+//  CONFIG: todas las fechas de la temporada en orden cronológico
+//  (F1 → F26 → Semifinal → Final). Mismo BASE_URL que el index.
+// ══════════════════════════════════════════════════════════════════
+const BASE_URL = 'https://raw.githubusercontent.com/agustincony/Informes-GPS/main/datos';
+
+const FECHAS_CONFIG = [
+  { key:'f1',  label:'F1',  file:'f1.json'  },
+  { key:'f2',  label:'F2',  file:'f2.json'  },
+  { key:'f3',  label:'F3',  file:'f3.json'  },
+  { key:'f4',  label:'F4',  file:'f4.json'  },
+  { key:'f5',  label:'F5',  file:'f5.json'  },
+  { key:'f6',  label:'F6',  file:'f6.json'  },
+  { key:'f7',  label:'F7',  file:'f7.json'  },
+  { key:'f8',  label:'F8',  file:'f8.json'  },
+  { key:'f9',  label:'F9',  file:'f9.json'  },
+  { key:'f10', label:'F10', file:'f10.json' },
+  { key:'f11', label:'F11', file:'f11.json' },
+  { key:'f12', label:'F12', file:'f12.json' },
+  { key:'f13', label:'F13', file:'f13.json' },
+  { key:'f14', label:'F14', file:'f14.json' },
+  { key:'f15', label:'F15', file:'f15.json' },
+  { key:'f16', label:'F16', file:'f16.json' },
+  { key:'f17', label:'F17', file:'f17.json' },
+  { key:'f18', label:'F18', file:'f18.json' },
+  { key:'f19', label:'F19', file:'f19.json' },
+  { key:'f20', label:'F20', file:'f20.json' },
+  { key:'f21', label:'F21', file:'f21.json' },
+  { key:'f22', label:'F22', file:'f22.json' },
+  { key:'f23', label:'F23', file:'f23.json' },
+  { key:'f24', label:'F24', file:'f24.json' },
+  { key:'f25', label:'F25', file:'f25.json' },
+  { key:'f26', label:'F26', file:'f26.json' },
+  // Playoffs — una columna SF (Primera por un lado, Inter+PreA por otro) y una Final
+  { key:'sf-primera', label:'SF', file:'Semifinal vs Hindú PRIMERA.json' },
+  { key:'sf-inter-prea', label:'SF', file:'semifinales-inter y pre a.json' },
+  { key:'final', label:'Final', file:'final-intermedia-vs-sic.json' },
+];
+
+
+// ══════════════════════════════════════════════════════════════════
+//  Estado
+// ══════════════════════════════════════════════════════════════════
+const DATA_CACHE = {};        // key -> JSON crudo de cada fecha
+let PLAYER_INDEX = {};         // nombre -> [{ key, label, rec(by team) }]
+let activeTeam = 'total';      // total | Primera | Intermedia | Pre A
+let selectedPlayer = '';
+let bigViewMode = 'stacked';
+
+// ══════════════════════════════════════════════════════════════════
+//  Nombres (mismo criterio que el index)
+// ══════════════════════════════════════════════════════════════════
+const DOUBLE_SURNAMES = new Set([
+  'Gomez Salaverri','Montes de Oca','Rocca Rivarola','Dominguez Perdigón',
+  'Rocca Sackmann','Torres Obeid','Saenz de Miera'
+]);
+function fmtName(full){
+  const p=full.trim().split(' ');
+  if(p.length===1) return p[0];
+  const last3=p.slice(-3).join(' ');
+  const last2=p.slice(-2).join(' ');
+  let apellido, nombre;
+  if(p.length>=4 && DOUBLE_SURNAMES.has(last3)){ apellido=last3; nombre=p.slice(0,-3).join(' '); }
+  else if(p.length>=3 && DOUBLE_SURNAMES.has(last2)){ apellido=last2; nombre=p.slice(0,-2).join(' '); }
+  else { apellido=p[p.length-1]; nombre=p.slice(0,-1).join(' '); }
+  return apellido+' '+nombre[0]+'.';
+}
+function splitName(full){
+  const p=full.trim().split(' ');
+  const last3=p.slice(-3).join(' ');
+  const last2=p.slice(-2).join(' ');
+  let apellido, nombre;
+  if(p.length>=4 && DOUBLE_SURNAMES.has(last3)){ apellido=last3; nombre=p.slice(0,-3).join(' '); }
+  else if(p.length>=3 && DOUBLE_SURNAMES.has(last2)){ apellido=last2; nombre=p.slice(0,-2).join(' '); }
+  else if(p.length===1){ apellido=p[0]; nombre=''; }
+  else { apellido=p[p.length-1]; nombre=p.slice(0,-1).join(' '); }
+  return {nombre, apellido};
+}
+
+function f(v,d=0){return (+v).toFixed(d)}
+function tc(t){return t==='Primera'?'#1A7CC2':t==='Intermedia'?'#C47000':'#3A8A2A'}
+
+// Posición: respetar overrides del proyecto para ciertos jugadores
+const POS_GROUP={'Pilar izquiero':'Primera Línea','Pilar izquierdo':'Primera Línea','Pilar derecho':'Primera Línea','Pilar Derecho':'Primera Línea','Hooker':'Primera Línea','Segunda Linea':'Segunda Línea','Segunda Línea':'Segunda Línea','Ala':'Tercera Línea','Octavo':'Tercera Línea','Tercera Línea':'Tercera Línea','Medio Scrum':'Medio Scrum','Apertura':'Apertura','Centro':'Centro','Wing':'Wing','Full Back':'Fullback','Fullback':'Fullback'};
+function posLabel(p){return POS_GROUP[p]||p;}
+
+// ══════════════════════════════════════════════════════════════════
+//  Carga de todas las fechas + construcción del índice por jugador
+// ══════════════════════════════════════════════════════════════════
+async function fetchFecha(cfg){
+  if(DATA_CACHE[cfg.key]) return DATA_CACHE[cfg.key];
+  const r = await fetch(BASE_URL + '/' + encodeURIComponent(cfg.file));
+  if(!r.ok) throw new Error('HTTP '+r.status+' '+cfg.file);
+  const d = await r.json();
+  DATA_CACHE[cfg.key]=d;
+  return d;
+}
+
+function buildPlayerIndex(){
+  PLAYER_INDEX = {};
+  for(const cfg of FECHAS_CONFIG){
+    const data = DATA_CACHE[cfg.key];
+    if(!data || !data.players) continue;
+    // Para cada equipo, registrar el registro del jugador en esta fecha
+    // Guardamos un objeto por (jugador, fecha) con sub-registros por equipo + total
+    const perPlayer = {}; // name -> { total, Primera, Intermedia, 'Pre A' }
+    ['total','Primera','Intermedia','Pre A'].forEach(team=>{
+      const arr = data.players[team] || [];
+      arr.forEach(rec=>{
+        if(!perPlayer[rec.name]) perPlayer[rec.name]={};
+        perPlayer[rec.name][team]=rec;
+      });
+    });
+    Object.keys(perPlayer).forEach(name=>{
+      if(!PLAYER_INDEX[name]) PLAYER_INDEX[name]=[];
+      PLAYER_INDEX[name].push({
+        key: cfg.key,
+        label: cfg.label,
+        byTeam: perPlayer[name]
+      });
+    });
+  }
+}
+
+// Serie de un jugador para el equipo activo: una entrada por fecha donde
+// tiene registro en ese equipo (o en total). Partidos no jugados NO aparecen.
+function playerSeries(name, team){
+  const entries = PLAYER_INDEX[name]||[];
+  const out = [];
+  entries.forEach(e=>{
+    const rec = e.byTeam[team];
+    if(rec){
+      out.push({ ...rec, _fecha: e.label, _key: e.key });
+    }
+  });
+  return out; // ya en orden cronológico (FECHAS_CONFIG está ordenado)
+}
+
+// Teams en los que el jugador tiene al menos un registro (para habilitar/deshabilitar tabs)
+function playerTeams(name){
+  const set = new Set();
+  (PLAYER_INDEX[name]||[]).forEach(e=>{
+    Object.keys(e.byTeam).forEach(t=>{ if(t!=='total') set.add(t); });
+  });
+  return set;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  GRÁFICOS — mismas funciones que el index, eje X = fecha del jugador
+// ══════════════════════════════════════════════════════════════════
+function avg(arr,k){return arr.length?arr.reduce((s,p)=>s+(+p[k]||0),0)/arr.length:0}
+
+// Core de barras. xLabel por entrada = su fecha (_fecha).
+function svgBars({data, barKey, barLabel, barColor, dotsKey, dotsLabel,
+                  dotsFormat, barFormat}){
+  const n=data.length;
+  if(!n) return '<p style="color:#ccc;font-family:var(--fbc);text-align:center;padding:14px">Sin datos</p>';
+  const slotW=30;
+  const nameH=30;
+  const pad={t:22,r:8,b:6,l:38};
+  const chartH=148;
+  const H=pad.t+chartH+nameH+pad.b;
+  const W=Math.max(n*slotW+pad.l+pad.r,460);
+  const BW=slotW*0.5;
+  const yBase=pad.t+chartH;
+  const maxBar=Math.max(...data.map(p=>+p[barKey]),0.01);
+
+  let dotsVals=[], maxDots=1, minDots=0;
+  if(dotsKey){ dotsVals=data.map(p=>+p[dotsKey]); maxDots=Math.max(...dotsVals,0.01); minDots=Math.min(...dotsVals); }
+
+  let out='';
+  out+=`<rect x="0" y="0" width="${W}" height="${H}" fill="#FFFFFF"/>`;
+  [0,.25,.5,.75,1].forEach(t=>{
+    const y=yBase-t*chartH;
+    const v=t*maxBar;
+    let lbl;
+    if(v===0) lbl='0';
+    else if(v>=10000) lbl=(v/1000).toFixed(0)+'k';
+    else if(v>=1000) lbl=(v/1000).toFixed(1)+'k';
+    else lbl=v>=10?Math.round(v):f(v,1);
+    out+=`<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${W-pad.r}" y2="${y.toFixed(1)}" stroke="#EEEEEE" stroke-width="1"/>`;
+    out+=`<text x="${pad.l-4}" y="${(y+3.5).toFixed(1)}" text-anchor="end" font-family="Barlow Condensed" font-size="8.5" fill="#CCCCCC">${lbl}</text>`;
+  });
+  const lgdClr=barColor==='team'?'#1A7CC2':(barColor||'#1A7CC2');
+  out+=`<text x="${pad.l}" y="14" font-family="Barlow Condensed" font-size="9" fill="${lgdClr}">▪ ${barLabel}</text>`;
+  if(dotsKey) out+=`<text x="${pad.l+120}" y="14" font-family="Barlow Condensed" font-size="9" fill="#555">● ${dotsLabel}</text>`;
+
+  const pts=[];
+  data.forEach((p,i)=>{
+    const cx=pad.l+(i+0.5)*slotW;
+    const bh=Math.max((+p[barKey]/maxBar)*chartH,2);
+    const by=yBase-bh;
+    const clr=barColor==='team'?tc(p.team):(barColor||'#1A7CC2');
+    out+=`<rect x="${(cx-BW/2).toFixed(1)}" y="${by.toFixed(1)}" width="${BW.toFixed(1)}" height="${bh.toFixed(1)}" fill="${clr}" opacity="0.88" rx="2"/>`;
+    const bv=+p[barKey];
+    let bs;
+    if(barFormat) bs=barFormat(bv);
+    else if(barKey==='total_dist') bs=Math.round(bv)+'';
+    else bs=bv>=10?Math.round(bv)+'':(Math.abs(bv-Math.round(bv))<0.01?Math.round(bv)+'':f(bv,1));
+    out+=`<text x="${cx.toFixed(1)}" y="${(by-2).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="8" font-weight="700" fill="#333">${bs}</text>`;
+    // etiqueta de fecha (horizontal, centrada)
+    out+=`<text x="${cx.toFixed(1)}" y="${(yBase+14).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="10" fill="#444" font-weight="700">${p._fecha}</text>`;
+    if(dotsKey){
+      const range=maxDots-minDots||1;
+      const dy=yBase-((+p[dotsKey]-minDots)/range)*chartH*0.80-chartH*0.06;
+      pts.push({x:cx,y:dy,val:+p[dotsKey]});
+    }
+  });
+  // conectar dots con línea tenue + puntos (tendencia)
+  if(dotsKey && pts.length){
+    if(pts.length>1){
+      const d2=pts.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+      out+=`<path d="${d2}" fill="none" stroke="#999" stroke-width="1.2" opacity="0.5"/>`;
+    }
+    pts.forEach(p=>{
+      out+=`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2.5" fill="#555" opacity="0.8"/>`;
+      const dv=dotsFormat?dotsFormat(p.val):f(p.val,1);
+      const isTop=p.y<pad.t+chartH*0.28;
+      const lvy=isTop?p.y+13:p.y-7;
+      out+=`<text x="${p.x.toFixed(1)}" y="${lvy.toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="8" fill="#777" opacity="0.9">${dv}</text>`;
+    });
+  }
+  return `<div class="cso"><svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${out}</svg></div>`;
+}
+
+// Línea pura (una métrica a lo largo del año) con promedio
+function svgLine(data, key, label, fmt, color){
+  const n=data.length;
+  if(!n) return '<p style="color:#ccc;font-family:var(--fbc);text-align:center;padding:14px">Sin datos</p>';
+  const slotW=30, nameH=30, pad={t:28,r:10,b:8,l:40};
+  const chartH=140, H=pad.t+chartH+nameH+pad.b;
+  const W=Math.max(n*slotW+pad.l+pad.r,460);
+  const yBase=pad.t+chartH;
+  const vals=data.map(p=>+p[key]||0);
+  const mean=vals.reduce((s,v)=>s+v,0)/n;
+  const maxV=Math.max(...vals)*1.12||1;
+  const minV=Math.min(0,...vals);
+  const range=(maxV-minV)||1;
+  let out='';
+  out+=`<rect x="0" y="0" width="${W}" height="${H}" fill="#FFFFFF"/>`;
+  [0,.25,.5,.75,1].forEach(t=>{
+    const y=yBase-t*chartH; const v=minV+t*range;
+    out+=`<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${W-pad.r}" y2="${y.toFixed(1)}" stroke="#EEEEEE" stroke-width="1"/>`;
+    out+=`<text x="${pad.l-4}" y="${(y+3.5).toFixed(1)}" text-anchor="end" font-family="Barlow Condensed" font-size="8.5" fill="#CCCCCC">${fmt?fmt(v):(v>=10?Math.round(v):f(v,1))}</text>`;
+  });
+  // promedio
+  const avgY=yBase-((mean-minV)/range)*chartH;
+  out+=`<line x1="${pad.l}" y1="${avgY.toFixed(1)}" x2="${W-pad.r}" y2="${avgY.toFixed(1)}" stroke="${color}" stroke-width="1.4" stroke-dasharray="5,3" opacity="0.6"/>`;
+  out+=`<text x="${W-pad.r-2}" y="${(avgY-4).toFixed(1)}" text-anchor="end" font-family="Barlow Condensed" font-size="9" fill="${color}" font-weight="700">Prom ${fmt?fmt(mean):f(mean,1)}</text>`;
+  out+=`<text x="${pad.l}" y="16" font-family="Barlow Condensed" font-size="9" fill="${color}">● ${label}</text>`;
+  const pts=data.map((p,i)=>({x:pad.l+(i+0.5)*slotW,y:yBase-(((+p[key]||0)-minV)/range)*chartH,val:+p[key]||0,fecha:p._fecha}));
+  if(pts.length>1){
+    const d=pts.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+    out+=`<path d="${d}" fill="none" stroke="${color}" stroke-width="2" opacity="0.85"/>`;
+  }
+  pts.forEach(p=>{
+    out+=`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="${color}" stroke="#fff" stroke-width="1.5"/>`;
+    const lvy=p.y<pad.t+18?p.y+13:p.y-7;
+    out+=`<text x="${p.x.toFixed(1)}" y="${lvy.toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="8.5" fill="${color}" font-weight="700">${fmt?fmt(p.val):(p.val>=10?Math.round(p.val):f(p.val,1))}</text>`;
+    out+=`<text x="${p.x.toFixed(1)}" y="${(yBase+14).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="10" fill="#444" font-weight="700">${p.fecha}</text>`;
+  });
+  return `<div class="cso"><svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${out}</svg></div>`;
+}
+
+// Accel / Decel (doble barra) a lo largo del año
+function accelChart(data){
+  const d=data.filter(p=>p.accel_count>0||p.decel_count>0);
+  if(!d.length) return '<p style="color:#ccc;font-family:var(--fbc);text-align:center;padding:14px">Sin datos</p>';
+  const n=d.length, slotW=30, nameH=30, pad={t:22,r:8,b:6,l:38};
+  const chartH=148, H=pad.t+chartH+nameH+pad.b;
+  const W=Math.max(n*slotW+pad.l+pad.r,460);
+  const barW=7, gap=1;
+  const maxV=Math.max(...d.map(p=>Math.max(p.accel_count,p.decel_count)))||1;
+  const yBase=pad.t+chartH;
+  let out='';
+  out+=`<rect x="0" y="0" width="${W}" height="${H}" fill="#FFFFFF"/>`;
+  [0,.25,.5,.75,1].forEach(t=>{
+    const y=yBase-t*chartH, v=Math.round(t*maxV);
+    out+=`<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${W-pad.r}" y2="${y.toFixed(1)}" stroke="#EEEEEE" stroke-width="1"/>`;
+    out+=`<text x="${pad.l-4}" y="${(y+3.5).toFixed(1)}" text-anchor="end" font-family="Barlow Condensed" font-size="8.5" fill="#CCCCCC">${v}</text>`;
+  });
+  out+=`<text x="${pad.l}" y="14" font-family="Barlow Condensed" font-size="9" fill="#1A7CC2">▪ Aceleraciones</text>`;
+  out+=`<text x="${pad.l+100}" y="14" font-family="Barlow Condensed" font-size="9" fill="#E05050">▪ Desaceleraciones</text>`;
+  d.forEach((p,i)=>{
+    const cx=pad.l+(i+0.5)*slotW;
+    const x0=cx-barW-gap;
+    const bha=Math.max((p.accel_count/maxV)*chartH,2); const bya=yBase-bha;
+    out+=`<rect x="${x0.toFixed(1)}" y="${bya.toFixed(1)}" width="${barW}" height="${bha.toFixed(1)}" fill="#1A7CC2" opacity="0.88" rx="2"/>`;
+    out+=`<text x="${(x0+barW/2).toFixed(1)}" y="${(bya-2).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="8" fill="#333">${Math.round(p.accel_count)}</text>`;
+    const x1=cx+gap;
+    const bhd=Math.max((p.decel_count/maxV)*chartH,2); const byd=yBase-bhd;
+    out+=`<rect x="${x1.toFixed(1)}" y="${byd.toFixed(1)}" width="${barW}" height="${bhd.toFixed(1)}" fill="#E05050" opacity="0.88" rx="2"/>`;
+    out+=`<text x="${(x1+barW/2).toFixed(1)}" y="${(byd-2).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="8" fill="#333">${Math.round(p.decel_count)}</text>`;
+    out+=`<text x="${cx.toFixed(1)}" y="${(yBase+14).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="10" fill="#444" font-weight="700">${p._fecha}</text>`;
+  });
+  return `<div class="cso"><svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${out}</svg></div>`;
+}
+
+// RHIE: 3 barras (total, media, máx) por fecha
+function rhieChart(data){
+  const d=data.filter(p=>p.rhie>0);
+  if(!d.length) return '<p style="color:#ccc;font-family:var(--fbc);text-align:center;padding:14px">Sin datos RHIE</p>';
+  const n=d.length, slotW=30, nameH=30, pad={t:22,r:8,b:6,l:38};
+  const chartH=148, H=pad.t+chartH+nameH+pad.b;
+  const W=Math.max(n*slotW+pad.l+pad.r,460);
+  const tripleW=slotW*0.72; const bW=tripleW/3;
+  const maxR=Math.max(...d.map(p=>Math.max(p.rhie,p.rhie_max)))||1;
+  const yBase=pad.t+chartH;
+  let out='';
+  out+=`<rect x="0" y="0" width="${W}" height="${H}" fill="#FFFFFF"/>`;
+  [0,.25,.5,.75,1].forEach(t=>{
+    const y=yBase-t*chartH, v=Math.round(t*maxR);
+    out+=`<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${W-pad.r}" y2="${y.toFixed(1)}" stroke="#EEEEEE" stroke-width="1"/>`;
+    out+=`<text x="${pad.l-4}" y="${(y+3.5).toFixed(1)}" text-anchor="end" font-family="Barlow Condensed" font-size="8.5" fill="#CCCCCC">${v}</text>`;
+  });
+  out+=`<text x="${pad.l}" y="14" font-family="Barlow Condensed" font-size="9" fill="#2E7D32">▪ Total</text>`;
+  out+=`<text x="${pad.l+44}" y="14" font-family="Barlow Condensed" font-size="9" fill="#1A7CC2">▪ Media</text>`;
+  out+=`<text x="${pad.l+88}" y="14" font-family="Barlow Condensed" font-size="9" fill="#C0392B">▪ Máx</text>`;
+  d.forEach((p,i)=>{
+    const cx=pad.l+(i+0.5)*slotW;
+    const x0=cx-tripleW/2, x1=x0+bW, x2=x0+bW*2;
+    const bh1=Math.max((p.rhie/maxR)*chartH,2);
+    const bh2=Math.max((p.rhie_mean/maxR)*chartH,2);
+    const bh3=Math.max((p.rhie_max/maxR)*chartH,2);
+    out+=`<rect x="${x0.toFixed(1)}" y="${(yBase-bh1).toFixed(1)}" width="${(bW-1).toFixed(1)}" height="${bh1.toFixed(1)}" fill="#2E7D32" opacity="0.88" rx="2"/>`;
+    out+=`<text x="${(x0+bW/2).toFixed(1)}" y="${(yBase-bh1-2).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="7.5" fill="#2E7D32">${p.rhie}</text>`;
+    out+=`<rect x="${x1.toFixed(1)}" y="${(yBase-bh2).toFixed(1)}" width="${(bW-1).toFixed(1)}" height="${bh2.toFixed(1)}" fill="#1A7CC2" opacity="0.88" rx="2"/>`;
+    out+=`<text x="${(x1+bW/2).toFixed(1)}" y="${(yBase-bh2-2).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="7.5" fill="#1A7CC2">${Math.round(p.rhie_mean)}</text>`;
+    out+=`<rect x="${x2.toFixed(1)}" y="${(yBase-bh3).toFixed(1)}" width="${(bW-1).toFixed(1)}" height="${bh3.toFixed(1)}" fill="#C0392B" opacity="0.75" rx="2"/>`;
+    out+=`<text x="${(x2+bW/2).toFixed(1)}" y="${(yBase-bh3-2).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="7.5" fill="#C0392B">${p.rhie_max}</text>`;
+    out+=`<text x="${cx.toFixed(1)}" y="${(yBase+14).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="10" fill="#444" font-weight="700">${p._fecha}</text>`;
+  });
+  return `<div class="cso"><svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${out}</svg></div>`;
+}
+
+// BiG: distribución apilada por fecha (corta/media/larga) + prom individual por fecha
+function bigChart(data){
+  const d=data.filter(p=>p.big_total>0);
+  if(!d.length) return '<p style="color:#ccc;font-family:var(--fbc);text-align:center;padding:14px">Sin datos</p>';
+  const toggle=`<div style="display:flex;gap:4px;margin-bottom:8px">
+    <div class="ctab ${bigViewMode==='stacked'?'active':''}" onclick="setBigView('stacked')">Distribución</div>
+    <div class="ctab ${bigViewMode==='avg'?'active':''}" onclick="setBigView('avg')">Prom. x fecha</div>
+  </div>`;
+  if(bigViewMode==='avg'){
+    return toggle+svgLine(d,'big_avg_time','Prom BiG (s)',v=>f(v,1)+'s','#1A7CC2');
+  }
+  const maxT=Math.max(...d.map(p=>p.big_total));
+  let rows=`<div class="big-legend" style="display:flex;gap:8px;margin-bottom:6px">
+    <div style="display:flex;align-items:center;gap:3px;font-family:var(--fbc);font-size:10px;color:#aaa"><div style="width:8px;height:8px;border-radius:2px;background:#5CB85C"></div>Corta</div>
+    <div style="display:flex;align-items:center;gap:3px;font-family:var(--fbc);font-size:10px;color:#aaa"><div style="width:8px;height:8px;border-radius:2px;background:#F0C040"></div>Media</div>
+    <div style="display:flex;align-items:center;gap:3px;font-family:var(--fbc);font-size:10px;color:#aaa"><div style="width:8px;height:8px;border-radius:2px;background:#FF4444"></div>Larga</div>
+  </div>`;
+  rows+=d.map(p=>{
+    const ws=maxT?Math.round(p.big_short/maxT*100):0;
+    const wm=maxT?Math.round(p.big_med/maxT*100):0;
+    const wl=maxT?Math.round(p.big_long/maxT*100):0;
+    return `<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">
+      <div style="font-family:var(--fbc);font-size:11px;font-weight:700;width:42px;flex-shrink:0;color:var(--fg)">${p._fecha}</div>
+      <div style="flex:1;height:13px;border-radius:3px;overflow:hidden;display:flex;background:var(--bg4)">
+        <div style="width:${ws}%;background:#5CB85C;height:100%"></div>
+        <div style="width:${wm}%;background:#F0C040;height:100%"></div>
+        <div style="width:${wl}%;background:#FF4444;height:100%"></div>
+      </div>
+      <div style="font-family:var(--fbc);font-size:10px;color:#bbb;width:52px;text-align:right;flex-shrink:0">${p.big_short}·${p.big_med}·${p.big_long}</div>
+      <div style="font-family:var(--fbc);font-size:11px;font-weight:700;width:40px;text-align:right;flex-shrink:0;color:#888">${f(p.big_avg_time,2)}s</div>
+    </div>`;
+  }).join('');
+  return toggle+rows;
+}
+
+function setBigView(mode){ bigViewMode=mode; render(); }
+
+function attachDrag(){
+  document.querySelectorAll('.cso').forEach(el=>{
+    let dn=false,sx,sl;
+    el.onmousedown=e=>{dn=true;sx=e.pageX-el.offsetLeft;sl=el.scrollLeft;e.preventDefault()};
+    document.onmouseup=()=>dn=false;
+    document.onmousemove=e=>{if(!dn)return;el.scrollLeft=sl-(e.pageX-el.offsetLeft-sx)*1.2};
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  RESUMEN (promedios/totales) — SOLO fechas con +30 min
+// ══════════════════════════════════════════════════════════════════
+function buildSummary(data){
+  const d30 = data.filter(p=>p.total_mins>=30);
+  const base = d30.length?d30:data; // fallback si no hay ninguno >=30
+  const nMatches = d30.length;
+  const totDist = base.reduce((s,p)=>s+(+p.total_dist||0),0);
+  const totMins = base.reduce((s,p)=>s+(+p.total_mins||0),0);
+  const maxVelSeason = Math.max(...data.map(p=>+p.max_vel||0)); // máx absoluto de TODA la temporada
+  const kpis=[
+    {lbl:'PARTIDOS +30\'', v:nMatches+''},
+    {lbl:'DIST. TOTAL', v:f(totDist/1000,1)+'<span class="kpi-u">km</span>'},
+    {lbl:'DIST. PROM', v:f(avg(base,'total_dist')/1000,2)+'<span class="kpi-u">km</span>'},
+    {lbl:'VEL MÁX AÑO', v:f(maxVelSeason,1)+'<span class="kpi-u">km/h</span>'},
+    {lbl:'HSR PROM', v:Math.round(avg(base,'ai18'))+'<span class="kpi-u">m</span>'},
+    {lbl:'SPRINT PROM', v:Math.round(avg(base,'dt25'))+'<span class="kpi-u">m</span>'},
+    {lbl:'ACEL PROM', v:Math.round(avg(base,'accel_count'))+''},
+    {lbl:'DESAC PROM', v:Math.round(avg(base,'decel_count'))+''},
+    {lbl:'CONTACTOS', v:Math.round(avg(base,'contacts'))+''},
+    {lbl:'RHIE PROM', v:Math.round(avg(base,'rhie'))+''},
+    {lbl:'BiG PROM', v:f(avg(base,'big_avg_time'),2)+'<span class="kpi-u">s</span>'},
+    {lbl:'M/MIN PROM', v:f(avg(base,'avg_mpm'),1)+''},
+  ];
+  const note = d30.length?'Promedios sobre partidos con +30 min':'Sin partidos +30 min — promedios sobre todos';
+  return `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
+    ${kpis.map(k=>`<div class="kpi"><div class="kpi-lbl">${k.lbl}</div><div class="kpi-v">${k.v}</div></div>`).join('')}
+  </div>
+  <div style="font-family:var(--fbc);font-size:9px;color:#bbb;margin-top:6px;text-align:right">${note}</div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  UI: tabs equipo, selector jugador, render principal
+// ══════════════════════════════════════════════════════════════════
+function teamClass(t){return t==='total'?'at':t==='Primera'?'ap':t==='Intermedia'?'ai':'aa';}
+
+function refreshTeamTabs(){
+  const teams = selectedPlayer?playerTeams(selectedPlayer):new Set(['Primera','Intermedia','Pre A']);
+  document.querySelectorAll('#team-tabs .ftab').forEach(b=>{
+    const t=b.getAttribute('data-team');
+    b.classList.remove('ap','ai','aa','at','dim');
+    if(t!=='total' && !teams.has(t)) b.classList.add('dim');
+    if(t===activeTeam) b.classList.add(teamClass(t));
+  });
+}
+
+function setTeam(t,el){
+  activeTeam=t;
+  refreshTeamTabs();
+  render();
+}
+
+function populatePlayerSelect(){
+  const names = Object.keys(PLAYER_INDEX).sort((a,b)=>{
+    const A=splitName(a).apellido, B=splitName(b).apellido;
+    return A.localeCompare(B);
+  });
+  const sel=document.getElementById('player-select');
+  sel.innerHTML = names.map(n=>`<option value="${n.replace(/"/g,'&quot;')}">${fmtName(n)}</option>`).join('');
+  if(!selectedPlayer || !PLAYER_INDEX[selectedPlayer]) selectedPlayer=names[0]||'';
+  sel.value=selectedPlayer;
+}
+
+function selectPlayer(name){
+  selectedPlayer=name;
+  // si el equipo activo no aplica a este jugador, caer a total
+  const teams=playerTeams(name);
+  if(activeTeam!=='total' && !teams.has(activeTeam)) activeTeam='total';
+  refreshTeamTabs();
+  render();
+}
+
+function render(){
+  if(!selectedPlayer){ document.getElementById('mc').innerHTML=''; return; }
+  const data = playerSeries(selectedPlayer, activeTeam);
+
+  // meta chips: puesto y cantidad de partidos
+  const first = data[0] || (PLAYER_INDEX[selectedPlayer] && Object.values(PLAYER_INDEX[selectedPlayer][0].byTeam)[0]);
+  const metaEl=document.getElementById('player-meta');
+  if(first){
+    const d30=data.filter(p=>p.total_mins>=30).length;
+    metaEl.innerHTML=`
+      <div class="pm-chip">Puesto: <b>${posLabel(first.position)}</b></div>
+      <div class="pm-chip">GPS: <b>${first.gps||'—'}</b></div>
+      <div class="pm-chip">Partidos: <b>${data.length}</b></div>
+      <div class="pm-chip">+30': <b>${d30}</b></div>`;
+  } else metaEl.innerHTML='';
+
+  if(!data.length){
+    document.getElementById('mc').innerHTML=`<div style="padding:30px;text-align:center;font-family:var(--fbc);color:#bbb">Sin datos para <b>${fmtName(selectedPlayer)}</b> en ${activeTeam==='total'?'TOTAL':activeTeam}.</div>`;
+    return;
+  }
+
+  let h='';
+  h+=`<div class="sec"><div class="sec-ttl">RESUMEN DEL AÑO</div>${buildSummary(data)}</div>`;
+  h+=`<div class="sec"><div class="sec-ttl">🏃 VELOCIDAD MÁXIMA</div>${svgLine(data,'max_vel','Vel máx (km/h)',v=>f(v,1),'#C0392B')}</div>`;
+  h+=`<div class="sec"><div class="sec-ttl">📏 DISTANCIA + M/MIN</div>${svgBars({data,barKey:'total_dist',barLabel:'Distancia (m)',barColor:'team',dotsKey:'avg_mpm',dotsLabel:'m/min',dotsFormat:v=>f(v,1)})}</div>`;
+  h+=`<div class="sec"><div class="sec-ttl">🔥 ALTA INTENSIDAD >18 km/h</div>${svgBars({data,barKey:'ai18',barLabel:'>18 km/h (m)',barColor:'team',dotsKey:'ai_pct',dotsLabel:'AI %',dotsFormat:v=>f(v,1)+'%'})}</div>`;
+  h+=`<div class="sec"><div class="sec-ttl">💨 SPRINT +25 km/h</div>${svgBars({data,barKey:'dt25',barLabel:'>25 km/h (m)',barColor:'team',dotsKey:'sprint_count',dotsLabel:'Nº esfuerzos',dotsFormat:v=>Math.round(v)+''})}</div>`;
+  h+=`<div class="sec"><div class="sec-ttl">⚡ ACELERACIONES / DESACELERACIONES</div>${accelChart(data)}</div>`;
+  h+=`<div class="sec"><div class="sec-ttl">📊 RHIE</div>${rhieChart(data)}</div>`;
+  h+=`<div class="sec"><div class="sec-ttl">💥 CONTACTOS</div>${svgBars({data,barKey:'contacts',barLabel:'Total contactos',barColor:'team'})}</div>`;
+  h+=`<div class="sec"><div class="sec-ttl">🔁 VUELTA AL JUEGO (BiG)</div>${bigChart(data)}</div>`;
+
+  document.getElementById('mc').innerHTML=h;
+  attachDrag();
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  Inicialización: cargar TODAS las fechas con spinner
+// ══════════════════════════════════════════════════════════════════
+(async function(){
+  // logo desde el repo (misma carpeta base que los datos)
+  try{ document.getElementById('hdr-logo').src = BASE_URL.replace(/\/datos$/, '') + '/LOGO%20CASI%20SIN%20FONDO.png'; }catch(e){}
+  const overlay=document.getElementById('loading-overlay');
+  let ok=0;
+  const results = await Promise.allSettled(FECHAS_CONFIG.map(cfg=>fetchFecha(cfg)));
+  results.forEach(r=>{ if(r.status==='fulfilled') ok++; });
+  if(ok===0){
+    overlay.innerHTML='<div style="padding:40px;text-align:center;font-family:Barlow Condensed,sans-serif;color:#e44;font-size:14px;">No se pudieron cargar los datos.<br>Verificá tu conexión e intentá de nuevo.</div>';
+    return;
+  }
+  buildPlayerIndex();
+  populatePlayerSelect();
+  refreshTeamTabs();
+  render();
+  overlay.remove();
+})();
+</script>
+</body>
+</html>
