@@ -36,6 +36,8 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
 .ftab.aa{color:#fff;background:var(--ca);border-color:var(--ca)}
 .ftab.at{color:#fff;background:#444;border-color:#444}
 .ftab.dim{opacity:.35;pointer-events:none}
+.ptab{padding:4px 10px;text-align:center;font-family:var(--fbc);font-weight:700;font-size:11px;cursor:pointer;border-radius:4px;color:#aaa;background:var(--bg3);border:1px solid var(--bord);transition:all .15s;-webkit-tap-highlight-color:transparent;user-select:none}
+.ptab.active{color:var(--fg);background:var(--bg4);border-color:#999;font-weight:900}
 
 .player-sel-wrap{padding:0;display:flex;flex-direction:column;gap:4px}
 .player-sel-wrap select{font-family:var(--fbc);font-size:14px;font-weight:700;color:var(--fg);background:var(--bg2);border:1px solid var(--bord);border-radius:6px;padding:7px 10px;outline:none;width:100%}
@@ -47,6 +49,20 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
 .kpi-lbl{font-family:var(--fbc);font-size:8px;color:#bbb;font-weight:700;letter-spacing:.5px;white-space:nowrap}
 .kpi-v{font-family:var(--fbc);font-size:19px;font-weight:900;line-height:1.1;color:var(--fg)}
 .kpi-u{font-size:10px;color:#bbb;font-weight:400}
+
+.podium{display:flex;flex-direction:column;gap:5px}
+.pod{background:#fff;border:1px solid var(--bord);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;position:relative;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.pod.gold{border-color:var(--gold);border-width:2px}.pod.silver{border-color:var(--silver);border-width:2px}.pod.bronze{border-color:var(--bronze);border-width:2px}
+.pod-medal{font-size:18px;width:24px;text-align:center;flex-shrink:0}
+.pod-info{flex:1;min-width:0}
+.pod-name{font-family:var(--fbc);font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--fg)}
+.pod-sub{font-size:10px;color:#bbb}
+.pod-nums{text-align:right;flex-shrink:0}
+.pod-vel{font-family:var(--fbc);font-size:22px;font-weight:900;line-height:1;color:var(--fg)}
+.pod-pct{font-size:10px;color:#aaa}
+.pod-bar{position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--bg4)}
+.pod-fill{height:3px}
+.pod.gold .pod-fill{background:var(--gold)}.pod.silver .pod-fill{background:var(--silver)}.pod.bronze .pod-fill{background:var(--bronze)}
 
 .cso{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;cursor:grab}
 .cso:active{cursor:grabbing}
@@ -97,6 +113,13 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
     <div class="flt-lbl">JUGADOR</div>
     <div class="player-sel-wrap">
       <select id="player-select" onchange="selectPlayer(this.value)"></select>
+    </div>
+  </div>
+  <div>
+    <div class="flt-lbl">ORDENAR GRÁFICOS</div>
+    <div class="flt-row" id="sort-tabs">
+      <div class="ptab active" data-sort="fecha" onclick="setSort('fecha',this)">Por fecha</div>
+      <div class="ptab" data-sort="perf" onclick="setSort('perf',this)">Por rendimiento</div>
     </div>
   </div>
 </div>
@@ -151,14 +174,16 @@ const FECHAS_CONFIG = [
   { key:'final', label:'Final', file:'final-intermedia-vs-sic.json' },
 ];
 
-
 // ══════════════════════════════════════════════════════════════════
 //  Estado
 // ══════════════════════════════════════════════════════════════════
 const DATA_CACHE = {};        // key -> JSON crudo de cada fecha
-let PLAYER_INDEX = {};         // nombre -> [{ key, label, rec(by team) }]
+let PLAYER_INDEX = {};         // nombre -> [{ key, label, rival, byTeam }]
 let activeTeam = 'total';      // total | Primera | Intermedia | Pre A
 let selectedPlayer = '';
+let sortMode = 'fecha';        // fecha | perf
+let summaryMode = 'avg';       // avg | max
+let velMode = 'abs';           // abs | pct
 let bigViewMode = 'stacked';
 
 // ══════════════════════════════════════════════════════════════════
@@ -194,12 +219,22 @@ function splitName(full){
 function f(v,d=0){return (+v).toFixed(d)}
 function tc(t){return t==='Primera'?'#1A7CC2':t==='Intermedia'?'#C47000':'#3A8A2A'}
 
-// Posición: respetar overrides del proyecto para ciertos jugadores
+// Rival a partir del titulo del JSON: "CASI vs Alumni" -> "Alumni"
+function parseRival(titulo){
+  if(!titulo) return '';
+  const m = titulo.match(/vs\.?\s+(.+)$/i);
+  if(!m) return '';
+  let r = m[1].trim();
+  // Capitalizar normal (SIC queda SIC, resto Title-ish como venga)
+  return r;
+}
+
+// Posición: respetar overrides del proyecto
 const POS_GROUP={'Pilar izquiero':'Primera Línea','Pilar izquierdo':'Primera Línea','Pilar derecho':'Primera Línea','Pilar Derecho':'Primera Línea','Hooker':'Primera Línea','Segunda Linea':'Segunda Línea','Segunda Línea':'Segunda Línea','Ala':'Tercera Línea','Octavo':'Tercera Línea','Tercera Línea':'Tercera Línea','Medio Scrum':'Medio Scrum','Apertura':'Apertura','Centro':'Centro','Wing':'Wing','Full Back':'Fullback','Fullback':'Fullback'};
 function posLabel(p){return POS_GROUP[p]||p;}
 
 // ══════════════════════════════════════════════════════════════════
-//  Carga de todas las fechas + construcción del índice por jugador
+//  Carga de todas las fechas + índice por jugador
 // ══════════════════════════════════════════════════════════════════
 async function fetchFecha(cfg){
   if(DATA_CACHE[cfg.key]) return DATA_CACHE[cfg.key];
@@ -215,8 +250,7 @@ function buildPlayerIndex(){
   for(const cfg of FECHAS_CONFIG){
     const data = DATA_CACHE[cfg.key];
     if(!data || !data.players) continue;
-    // Para cada equipo, registrar el registro del jugador en esta fecha
-    // Guardamos un objeto por (jugador, fecha) con sub-registros por equipo + total
+    const rival = parseRival(data.titulo);
     const perPlayer = {}; // name -> { total, Primera, Intermedia, 'Pre A' }
     ['total','Primera','Intermedia','Pre A'].forEach(team=>{
       const arr = data.players[team] || [];
@@ -230,27 +264,44 @@ function buildPlayerIndex(){
       PLAYER_INDEX[name].push({
         key: cfg.key,
         label: cfg.label,
+        rival: rival,
         byTeam: perPlayer[name]
       });
     });
   }
 }
 
-// Serie de un jugador para el equipo activo: una entrada por fecha donde
-// tiene registro en ese equipo (o en total). Partidos no jugados NO aparecen.
+// Etiqueta de eje: "F1 Champagnat" / "SF Hindú" / "Final SIC"
+function axisLabel(entry){
+  return entry.rival ? (entry.label+' '+entry.rival) : entry.label;
+}
+
+// Serie de un jugador para el equipo activo (orden cronológico)
 function playerSeries(name, team){
   const entries = PLAYER_INDEX[name]||[];
   const out = [];
   entries.forEach(e=>{
     const rec = e.byTeam[team];
     if(rec){
-      out.push({ ...rec, _fecha: e.label, _key: e.key });
+      out.push({ ...rec, _fecha: e.label, _rival: e.rival, _ejelbl: axisLabel(e), _key: e.key });
     }
   });
-  return out; // ya en orden cronológico (FECHAS_CONFIG está ordenado)
+  return out;
 }
 
-// Teams en los que el jugador tiene al menos un registro (para habilitar/deshabilitar tabs)
+// Ordenar la serie de un gráfico según el modo y la métrica.
+// perfKey: campo por el que ordenar cuando sortMode==='perf'.
+// lowerBetter: true cuando menor es mejor (BiG) -> ascendente en perf.
+function orderFor(data, perfKey, lowerBetter){
+  if(sortMode==='fecha') return data; // ya cronológico
+  const arr=[...data];
+  arr.sort((a,b)=>{
+    const va=+a[perfKey]||0, vb=+b[perfKey]||0;
+    return lowerBetter ? (va-vb) : (vb-va);
+  });
+  return arr;
+}
+
 function playerTeams(name){
   const set = new Set();
   (PLAYER_INDEX[name]||[]).forEach(e=>{
@@ -260,17 +311,17 @@ function playerTeams(name){
 }
 
 // ══════════════════════════════════════════════════════════════════
-//  GRÁFICOS — mismas funciones que el index, eje X = fecha del jugador
+//  GRÁFICOS — eje X = fecha+rival (texto rotado, como el index)
 // ══════════════════════════════════════════════════════════════════
 function avg(arr,k){return arr.length?arr.reduce((s,p)=>s+(+p[k]||0),0)/arr.length:0}
 
-// Core de barras. xLabel por entrada = su fecha (_fecha).
+// nameAngle: grados de rotación de la etiqueta (negativo = inclina a la izq)
 function svgBars({data, barKey, barLabel, barColor, dotsKey, dotsLabel,
-                  dotsFormat, barFormat}){
+                  dotsFormat, barFormat, nameAngle=-45}){
   const n=data.length;
   if(!n) return '<p style="color:#ccc;font-family:var(--fbc);text-align:center;padding:14px">Sin datos</p>';
-  const slotW=30;
-  const nameH=30;
+  const slotW=34;
+  const nameH=58; // espacio para etiqueta rotada "F1 Champagnat"
   const pad={t:22,r:8,b:6,l:38};
   const chartH=148;
   const H=pad.t+chartH+nameH+pad.b;
@@ -279,8 +330,8 @@ function svgBars({data, barKey, barLabel, barColor, dotsKey, dotsLabel,
   const yBase=pad.t+chartH;
   const maxBar=Math.max(...data.map(p=>+p[barKey]),0.01);
 
-  let dotsVals=[], maxDots=1, minDots=0;
-  if(dotsKey){ dotsVals=data.map(p=>+p[dotsKey]); maxDots=Math.max(...dotsVals,0.01); minDots=Math.min(...dotsVals); }
+  let maxDots=1, minDots=0;
+  if(dotsKey){ const dv=data.map(p=>+p[dotsKey]); maxDots=Math.max(...dv,0.01); minDots=Math.min(...dv); }
 
   let out='';
   out+=`<rect x="0" y="0" width="${W}" height="${H}" fill="#FFFFFF"/>`;
@@ -312,15 +363,15 @@ function svgBars({data, barKey, barLabel, barColor, dotsKey, dotsLabel,
     else if(barKey==='total_dist') bs=Math.round(bv)+'';
     else bs=bv>=10?Math.round(bv)+'':(Math.abs(bv-Math.round(bv))<0.01?Math.round(bv)+'':f(bv,1));
     out+=`<text x="${cx.toFixed(1)}" y="${(by-2).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="8" font-weight="700" fill="#333">${bs}</text>`;
-    // etiqueta de fecha (horizontal, centrada)
-    out+=`<text x="${cx.toFixed(1)}" y="${(yBase+14).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="10" fill="#444" font-weight="700">${p._fecha}</text>`;
+    // etiqueta fecha+rival rotada
+    const ny=yBase+6;
+    out+=`<text x="${cx.toFixed(1)}" y="${ny.toFixed(1)}" text-anchor="end" font-family="Barlow Condensed" font-size="9.5" fill="#444" font-weight="600" transform="rotate(${nameAngle},${cx.toFixed(1)},${ny.toFixed(1)})">${p._ejelbl}</text>`;
     if(dotsKey){
       const range=maxDots-minDots||1;
       const dy=yBase-((+p[dotsKey]-minDots)/range)*chartH*0.80-chartH*0.06;
       pts.push({x:cx,y:dy,val:+p[dotsKey]});
     }
   });
-  // conectar dots con línea tenue + puntos (tendencia)
   if(dotsKey && pts.length){
     if(pts.length>1){
       const d2=pts.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
@@ -337,11 +388,11 @@ function svgBars({data, barKey, barLabel, barColor, dotsKey, dotsLabel,
   return `<div class="cso"><svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${out}</svg></div>`;
 }
 
-// Línea pura (una métrica a lo largo del año) con promedio
-function svgLine(data, key, label, fmt, color){
+// Línea pura (velocidad / minutos) con promedio
+function svgLine(data, key, label, fmt, color, nameAngle=-45){
   const n=data.length;
   if(!n) return '<p style="color:#ccc;font-family:var(--fbc);text-align:center;padding:14px">Sin datos</p>';
-  const slotW=30, nameH=30, pad={t:28,r:10,b:8,l:40};
+  const slotW=34, nameH=58, pad={t:28,r:10,b:8,l:40};
   const chartH=140, H=pad.t+chartH+nameH+pad.b;
   const W=Math.max(n*slotW+pad.l+pad.r,460);
   const yBase=pad.t+chartH;
@@ -357,12 +408,11 @@ function svgLine(data, key, label, fmt, color){
     out+=`<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${W-pad.r}" y2="${y.toFixed(1)}" stroke="#EEEEEE" stroke-width="1"/>`;
     out+=`<text x="${pad.l-4}" y="${(y+3.5).toFixed(1)}" text-anchor="end" font-family="Barlow Condensed" font-size="8.5" fill="#CCCCCC">${fmt?fmt(v):(v>=10?Math.round(v):f(v,1))}</text>`;
   });
-  // promedio
   const avgY=yBase-((mean-minV)/range)*chartH;
   out+=`<line x1="${pad.l}" y1="${avgY.toFixed(1)}" x2="${W-pad.r}" y2="${avgY.toFixed(1)}" stroke="${color}" stroke-width="1.4" stroke-dasharray="5,3" opacity="0.6"/>`;
   out+=`<text x="${W-pad.r-2}" y="${(avgY-4).toFixed(1)}" text-anchor="end" font-family="Barlow Condensed" font-size="9" fill="${color}" font-weight="700">Prom ${fmt?fmt(mean):f(mean,1)}</text>`;
   out+=`<text x="${pad.l}" y="16" font-family="Barlow Condensed" font-size="9" fill="${color}">● ${label}</text>`;
-  const pts=data.map((p,i)=>({x:pad.l+(i+0.5)*slotW,y:yBase-(((+p[key]||0)-minV)/range)*chartH,val:+p[key]||0,fecha:p._fecha}));
+  const pts=data.map((p,i)=>({x:pad.l+(i+0.5)*slotW,y:yBase-(((+p[key]||0)-minV)/range)*chartH,val:+p[key]||0,lbl:p._ejelbl}));
   if(pts.length>1){
     const d=pts.map((p,i)=>`${i?'L':'M'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
     out+=`<path d="${d}" fill="none" stroke="${color}" stroke-width="2" opacity="0.85"/>`;
@@ -371,16 +421,17 @@ function svgLine(data, key, label, fmt, color){
     out+=`<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="${color}" stroke="#fff" stroke-width="1.5"/>`;
     const lvy=p.y<pad.t+18?p.y+13:p.y-7;
     out+=`<text x="${p.x.toFixed(1)}" y="${lvy.toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="8.5" fill="${color}" font-weight="700">${fmt?fmt(p.val):(p.val>=10?Math.round(p.val):f(p.val,1))}</text>`;
-    out+=`<text x="${p.x.toFixed(1)}" y="${(yBase+14).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="10" fill="#444" font-weight="700">${p.fecha}</text>`;
+    const ny=yBase+6;
+    out+=`<text x="${p.x.toFixed(1)}" y="${ny.toFixed(1)}" text-anchor="end" font-family="Barlow Condensed" font-size="9.5" fill="#444" font-weight="600" transform="rotate(${nameAngle},${p.x.toFixed(1)},${ny.toFixed(1)})">${p.lbl}</text>`;
   });
   return `<div class="cso"><svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${out}</svg></div>`;
 }
 
-// Accel / Decel (doble barra) a lo largo del año
+// Accel / Decel (doble barra)
 function accelChart(data){
   const d=data.filter(p=>p.accel_count>0||p.decel_count>0);
   if(!d.length) return '<p style="color:#ccc;font-family:var(--fbc);text-align:center;padding:14px">Sin datos</p>';
-  const n=d.length, slotW=30, nameH=30, pad={t:22,r:8,b:6,l:38};
+  const n=d.length, slotW=34, nameH=58, pad={t:22,r:8,b:6,l:38};
   const chartH=148, H=pad.t+chartH+nameH+pad.b;
   const W=Math.max(n*slotW+pad.l+pad.r,460);
   const barW=7, gap=1;
@@ -405,16 +456,17 @@ function accelChart(data){
     const bhd=Math.max((p.decel_count/maxV)*chartH,2); const byd=yBase-bhd;
     out+=`<rect x="${x1.toFixed(1)}" y="${byd.toFixed(1)}" width="${barW}" height="${bhd.toFixed(1)}" fill="#E05050" opacity="0.88" rx="2"/>`;
     out+=`<text x="${(x1+barW/2).toFixed(1)}" y="${(byd-2).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="8" fill="#333">${Math.round(p.decel_count)}</text>`;
-    out+=`<text x="${cx.toFixed(1)}" y="${(yBase+14).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="10" fill="#444" font-weight="700">${p._fecha}</text>`;
+    const ny=yBase+6;
+    out+=`<text x="${cx.toFixed(1)}" y="${ny.toFixed(1)}" text-anchor="end" font-family="Barlow Condensed" font-size="9.5" fill="#444" font-weight="600" transform="rotate(-45,${cx.toFixed(1)},${ny.toFixed(1)})">${p._ejelbl}</text>`;
   });
   return `<div class="cso"><svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${out}</svg></div>`;
 }
 
-// RHIE: 3 barras (total, media, máx) por fecha
+// RHIE: 3 barras (total, media, máx)
 function rhieChart(data){
   const d=data.filter(p=>p.rhie>0);
   if(!d.length) return '<p style="color:#ccc;font-family:var(--fbc);text-align:center;padding:14px">Sin datos RHIE</p>';
-  const n=d.length, slotW=30, nameH=30, pad={t:22,r:8,b:6,l:38};
+  const n=d.length, slotW=34, nameH=58, pad={t:22,r:8,b:6,l:38};
   const chartH=148, H=pad.t+chartH+nameH+pad.b;
   const W=Math.max(n*slotW+pad.l+pad.r,460);
   const tripleW=slotW*0.72; const bW=tripleW/3;
@@ -442,19 +494,21 @@ function rhieChart(data){
     out+=`<text x="${(x1+bW/2).toFixed(1)}" y="${(yBase-bh2-2).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="7.5" fill="#1A7CC2">${Math.round(p.rhie_mean)}</text>`;
     out+=`<rect x="${x2.toFixed(1)}" y="${(yBase-bh3).toFixed(1)}" width="${(bW-1).toFixed(1)}" height="${bh3.toFixed(1)}" fill="#C0392B" opacity="0.75" rx="2"/>`;
     out+=`<text x="${(x2+bW/2).toFixed(1)}" y="${(yBase-bh3-2).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="7.5" fill="#C0392B">${p.rhie_max}</text>`;
-    out+=`<text x="${cx.toFixed(1)}" y="${(yBase+14).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="10" fill="#444" font-weight="700">${p._fecha}</text>`;
+    const ny=yBase+6;
+    out+=`<text x="${cx.toFixed(1)}" y="${ny.toFixed(1)}" text-anchor="end" font-family="Barlow Condensed" font-size="9.5" fill="#444" font-weight="600" transform="rotate(-45,${cx.toFixed(1)},${ny.toFixed(1)})">${p._ejelbl}</text>`;
   });
   return `<div class="cso"><svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${out}</svg></div>`;
 }
 
-// BiG: distribución apilada por fecha (corta/media/larga) + prom individual por fecha
+// BiG: distribución apilada (corta/media/larga) + prom x fecha. Más bajo = mejor.
 function bigChart(data){
   const d=data.filter(p=>p.big_total>0);
   if(!d.length) return '<p style="color:#ccc;font-family:var(--fbc);text-align:center;padding:14px">Sin datos</p>';
   const toggle=`<div style="display:flex;gap:4px;margin-bottom:8px">
     <div class="ctab ${bigViewMode==='stacked'?'active':''}" onclick="setBigView('stacked')">Distribución</div>
     <div class="ctab ${bigViewMode==='avg'?'active':''}" onclick="setBigView('avg')">Prom. x fecha</div>
-  </div>`;
+  </div>
+  <div style="font-family:var(--fbc);font-size:9px;color:#999;margin-bottom:6px">⬇ Menor tiempo BiG es mejor</div>`;
   if(bigViewMode==='avg'){
     return toggle+svgLine(d,'big_avg_time','Prom BiG (s)',v=>f(v,1)+'s','#1A7CC2');
   }
@@ -469,7 +523,7 @@ function bigChart(data){
     const wm=maxT?Math.round(p.big_med/maxT*100):0;
     const wl=maxT?Math.round(p.big_long/maxT*100):0;
     return `<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">
-      <div style="font-family:var(--fbc);font-size:11px;font-weight:700;width:42px;flex-shrink:0;color:var(--fg)">${p._fecha}</div>
+      <div style="font-family:var(--fbc);font-size:10px;font-weight:700;width:92px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--fg)">${p._ejelbl}</div>
       <div style="flex:1;height:13px;border-radius:3px;overflow:hidden;display:flex;background:var(--bg4)">
         <div style="width:${ws}%;background:#5CB85C;height:100%"></div>
         <div style="width:${wm}%;background:#F0C040;height:100%"></div>
@@ -483,6 +537,9 @@ function bigChart(data){
 }
 
 function setBigView(mode){ bigViewMode=mode; render(); }
+function setSort(mode,el){ sortMode=mode; document.querySelectorAll('#sort-tabs .ptab').forEach(b=>b.classList.remove('active')); el.classList.add('active'); render(); }
+function setSummaryMode(mode){ summaryMode=mode; render(); }
+function setVelMode(mode){ velMode=mode; render(); }
 
 function attachDrag(){
   document.querySelectorAll('.cso').forEach(el=>{
@@ -494,38 +551,72 @@ function attachDrag(){
 }
 
 // ══════════════════════════════════════════════════════════════════
-//  RESUMEN (promedios/totales) — SOLO fechas con +30 min
+//  MEDALLERO — 3 velocidades más rápidas del año (con partido)
+// ══════════════════════════════════════════════════════════════════
+function velPodium(data){
+  const sorted=[...data].filter(p=>+p.max_vel>0).sort((a,b)=>b.max_vel-a.max_vel).slice(0,3);
+  if(!sorted.length) return '';
+  const mx=sorted[0].max_vel||1;
+  const cls=['gold','silver','bronze'],med=['🥇','🥈','🥉'];
+  return sorted.map((p,i)=>`
+    <div class="pod ${cls[i]}">
+      <div class="pod-medal">${med[i]}</div>
+      <div class="pod-info">
+        <div class="pod-name">${p._ejelbl}</div>
+        <div class="pod-sub">${f(p.total_mins,0)} min · ${p.team}</div>
+      </div>
+      <div class="pod-nums">
+        <div class="pod-vel">${f(p.max_vel,2)}<span style="font-size:11px;color:#bbb"> km/h</span></div>
+        <div class="pod-pct">${f(p.max_vel_pct,1)}% V.Máx</div>
+      </div>
+      <div class="pod-bar"><div class="pod-fill" style="width:${(p.max_vel/mx*100).toFixed(1)}%"></div></div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  RESUMEN — promedio o máximo. Promedios/máx usan fechas +30 min.
+//  BiG: en "máximo" muestra el MÍNIMO (más bajo = mejor).
 // ══════════════════════════════════════════════════════════════════
 function buildSummary(data){
   const d30 = data.filter(p=>p.total_mins>=30);
-  const base = d30.length?d30:data; // fallback si no hay ninguno >=30
-  const nMatches = d30.length;
-  const totDist = base.reduce((s,p)=>s+(+p.total_dist||0),0);
-  const totMins = base.reduce((s,p)=>s+(+p.total_mins||0),0);
-  const maxVelSeason = Math.max(...data.map(p=>+p.max_vel||0)); // máx absoluto de TODA la temporada
+  const base = d30.length?d30:data;
+  const nMatches = data.length; // partidos TOTALES jugados
+
+  // helper: promedio o máximo de un campo sobre base
+  const agg = (k)=> summaryMode==='avg' ? avg(base,k) : Math.max(...base.map(p=>+p[k]||0));
+  const aggMinBetter = (k)=> summaryMode==='avg' ? avg(base,k) : Math.min(...base.map(p=>+p[k]||0).filter(v=>v>0));
+  const velSeason = Math.max(...data.map(p=>+p.max_vel||0)); // máx absoluto de TODA la temporada
+
+  const modeLbl = summaryMode==='avg' ? 'PROM' : 'MÁX';
+
   const kpis=[
-    {lbl:'PARTIDOS +30\'', v:nMatches+''},
-    {lbl:'DIST. TOTAL', v:f(totDist/1000,1)+'<span class="kpi-u">km</span>'},
-    {lbl:'DIST. PROM', v:f(avg(base,'total_dist')/1000,2)+'<span class="kpi-u">km</span>'},
-    {lbl:'VEL MÁX AÑO', v:f(maxVelSeason,1)+'<span class="kpi-u">km/h</span>'},
-    {lbl:'HSR PROM', v:Math.round(avg(base,'ai18'))+'<span class="kpi-u">m</span>'},
-    {lbl:'SPRINT PROM', v:Math.round(avg(base,'dt25'))+'<span class="kpi-u">m</span>'},
-    {lbl:'ACEL PROM', v:Math.round(avg(base,'accel_count'))+''},
-    {lbl:'DESAC PROM', v:Math.round(avg(base,'decel_count'))+''},
-    {lbl:'CONTACTOS', v:Math.round(avg(base,'contacts'))+''},
-    {lbl:'RHIE PROM', v:Math.round(avg(base,'rhie'))+''},
-    {lbl:'BiG PROM', v:f(avg(base,'big_avg_time'),2)+'<span class="kpi-u">s</span>'},
-    {lbl:'M/MIN PROM', v:f(avg(base,'avg_mpm'),1)+''},
+    {lbl:'PARTIDOS', v:nMatches+''},
+    {lbl:'MINUTOS '+modeLbl, v:Math.round(agg('total_mins'))+'<span class="kpi-u">\'</span>'},
+    {lbl:'DIST '+modeLbl, v:f(agg('total_dist')/1000,2)+'<span class="kpi-u">km</span>'},
+    {lbl:'VEL MÁX AÑO', v:f(velSeason,1)+'<span class="kpi-u">km/h</span>'},
+    {lbl:'HSR '+modeLbl, v:Math.round(agg('ai18'))+'<span class="kpi-u">m</span>'},
+    {lbl:'SPRINT '+modeLbl, v:Math.round(agg('dt25'))+'<span class="kpi-u">m</span>'},
+    {lbl:'ACEL '+modeLbl, v:Math.round(agg('accel_count'))+''},
+    {lbl:'DESAC '+modeLbl, v:Math.round(agg('decel_count'))+''},
+    {lbl:'CONTACTOS '+modeLbl, v:Math.round(agg('contacts'))+''},
+    {lbl:'RHIE '+modeLbl, v:Math.round(agg('rhie'))+''},
+    {lbl:'BiG '+(summaryMode==='avg'?'PROM':'MÍN'), v:f(aggMinBetter('big_avg_time'),2)+'<span class="kpi-u">s</span>'},
   ];
-  const note = d30.length?'Promedios sobre partidos con +30 min':'Sin partidos +30 min — promedios sobre todos';
-  return `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
+  const toggle=`<div class="chart-toggle" style="margin-bottom:8px">
+    <div class="ctab ${summaryMode==='avg'?'active':''}" onclick="setSummaryMode('avg')">Promedio</div>
+    <div class="ctab ${summaryMode==='max'?'active':''}" onclick="setSummaryMode('max')">Máximo</div>
+  </div>`;
+  const note = d30.length
+    ? 'Promedios/máximos calculados sobre partidos con +30 min · BiG: menor es mejor'
+    : 'Sin partidos +30 min — cálculo sobre todos los partidos · BiG: menor es mejor';
+  return toggle+`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
     ${kpis.map(k=>`<div class="kpi"><div class="kpi-lbl">${k.lbl}</div><div class="kpi-v">${k.v}</div></div>`).join('')}
   </div>
   <div style="font-family:var(--fbc);font-size:9px;color:#bbb;margin-top:6px;text-align:right">${note}</div>`;
 }
 
 // ══════════════════════════════════════════════════════════════════
-//  UI: tabs equipo, selector jugador, render principal
+//  UI
 // ══════════════════════════════════════════════════════════════════
 function teamClass(t){return t==='total'?'at':t==='Primera'?'ap':t==='Intermedia'?'ai':'aa';}
 
@@ -539,11 +630,7 @@ function refreshTeamTabs(){
   });
 }
 
-function setTeam(t,el){
-  activeTeam=t;
-  refreshTeamTabs();
-  render();
-}
+function setTeam(t,el){ activeTeam=t; refreshTeamTabs(); render(); }
 
 function populatePlayerSelect(){
   const names = Object.keys(PLAYER_INDEX).sort((a,b)=>{
@@ -558,7 +645,6 @@ function populatePlayerSelect(){
 
 function selectPlayer(name){
   selectedPlayer=name;
-  // si el equipo activo no aplica a este jugador, caer a total
   const teams=playerTeams(name);
   if(activeTeam!=='total' && !teams.has(activeTeam)) activeTeam='total';
   refreshTeamTabs();
@@ -567,9 +653,8 @@ function selectPlayer(name){
 
 function render(){
   if(!selectedPlayer){ document.getElementById('mc').innerHTML=''; return; }
-  const data = playerSeries(selectedPlayer, activeTeam);
+  const data = playerSeries(selectedPlayer, activeTeam); // cronológico
 
-  // meta chips: puesto y cantidad de partidos
   const first = data[0] || (PLAYER_INDEX[selectedPlayer] && Object.values(PLAYER_INDEX[selectedPlayer][0].byTeam)[0]);
   const metaEl=document.getElementById('player-meta');
   if(first){
@@ -586,26 +671,57 @@ function render(){
     return;
   }
 
+  // Datos ordenados por gráfico según sortMode
+  const dMins   = orderFor(data,'total_mins',false);
+  const dDist   = orderFor(data,'total_dist',false);
+  const dAi     = orderFor(data,'ai18',false);
+  const dSprint = orderFor(data,'dt25',false);
+  const dAccel  = orderFor(data,'accel_count',false);
+  const dRhie   = orderFor(data,'rhie',false);
+  const dCont   = orderFor(data,'contacts',false);
+  const dVel    = orderFor(data, velMode==='abs'?'max_vel':'max_vel_pct', false);
+  const dBig    = orderFor(data,'big_avg_time',true); // menor mejor
+
   let h='';
+  // RESUMEN
   h+=`<div class="sec"><div class="sec-ttl">RESUMEN DEL AÑO</div>${buildSummary(data)}</div>`;
-  h+=`<div class="sec"><div class="sec-ttl">🏃 VELOCIDAD MÁXIMA</div>${svgLine(data,'max_vel','Vel máx (km/h)',v=>f(v,1),'#C0392B')}</div>`;
-  h+=`<div class="sec"><div class="sec-ttl">📏 DISTANCIA + M/MIN</div>${svgBars({data,barKey:'total_dist',barLabel:'Distancia (m)',barColor:'team',dotsKey:'avg_mpm',dotsLabel:'m/min',dotsFormat:v=>f(v,1)})}</div>`;
-  h+=`<div class="sec"><div class="sec-ttl">🔥 ALTA INTENSIDAD >18 km/h</div>${svgBars({data,barKey:'ai18',barLabel:'>18 km/h (m)',barColor:'team',dotsKey:'ai_pct',dotsLabel:'AI %',dotsFormat:v=>f(v,1)+'%'})}</div>`;
-  h+=`<div class="sec"><div class="sec-ttl">💨 SPRINT +25 km/h</div>${svgBars({data,barKey:'dt25',barLabel:'>25 km/h (m)',barColor:'team',dotsKey:'sprint_count',dotsLabel:'Nº esfuerzos',dotsFormat:v=>Math.round(v)+''})}</div>`;
-  h+=`<div class="sec"><div class="sec-ttl">⚡ ACELERACIONES / DESACELERACIONES</div>${accelChart(data)}</div>`;
-  h+=`<div class="sec"><div class="sec-ttl">📊 RHIE</div>${rhieChart(data)}</div>`;
-  h+=`<div class="sec"><div class="sec-ttl">💥 CONTACTOS</div>${svgBars({data,barKey:'contacts',barLabel:'Total contactos',barColor:'team'})}</div>`;
-  h+=`<div class="sec"><div class="sec-ttl">🔁 VUELTA AL JUEGO (BiG)</div>${bigChart(data)}</div>`;
+
+  // MEDALLERO velocidad
+  const pod=velPodium(data);
+  if(pod) h+=`<div class="sec"><div class="sec-ttl">🏅 VELOCIDAD MÁX · TOP 3 DEL AÑO</div><div class="podium">${pod}</div></div>`;
+
+  // VELOCIDAD con toggle km/h / %
+  const velKey = velMode==='abs'?'max_vel':'max_vel_pct';
+  const velFmt = velMode==='abs'?(v=>f(v,1)):(v=>f(v,1)+'%');
+  const velLbl = velMode==='abs'?'Vel máx (km/h)':'% Vel máx';
+  h+=`<div class="sec"><div class="sec-ttl">🏃 VELOCIDAD MÁXIMA</div>
+    <div class="chart-toggle">
+      <div class="ctab ${velMode==='abs'?'active':''}" onclick="setVelMode('abs')">km/h</div>
+      <div class="ctab ${velMode==='pct'?'active':''}" onclick="setVelMode('pct')">% V.Máx</div>
+    </div>
+    ${svgLine(dVel,velKey,velLbl,velFmt,'#C0392B')}</div>`;
+
+  // MINUTOS POR PARTIDO (antes de distancia)
+  h+=`<div class="sec"><div class="sec-ttl">⏱️ MINUTOS POR PARTIDO</div>${svgLine(dMins,'total_mins','Minutos',v=>Math.round(v)+"'",'#1A7CC2')}</div>`;
+
+  // DISTANCIA + m/min
+  h+=`<div class="sec"><div class="sec-ttl">📏 DISTANCIA + M/MIN</div>${svgBars({data:dDist,barKey:'total_dist',barLabel:'Distancia (m)',barColor:'team',dotsKey:'avg_mpm',dotsLabel:'m/min',dotsFormat:v=>f(v,1)})}</div>`;
+
+  h+=`<div class="sec"><div class="sec-ttl">🔥 ALTA INTENSIDAD >18 km/h</div>${svgBars({data:dAi,barKey:'ai18',barLabel:'>18 km/h (m)',barColor:'team',dotsKey:'ai_pct',dotsLabel:'AI %',dotsFormat:v=>f(v,1)+'%'})}</div>`;
+  h+=`<div class="sec"><div class="sec-ttl">💨 SPRINT +25 km/h</div>${svgBars({data:dSprint,barKey:'dt25',barLabel:'>25 km/h (m)',barColor:'team',dotsKey:'sprint_count',dotsLabel:'Nº esfuerzos',dotsFormat:v=>Math.round(v)+''})}</div>`;
+  h+=`<div class="sec"><div class="sec-ttl">⚡ ACELERACIONES / DESACELERACIONES</div>${accelChart(dAccel)}</div>`;
+  h+=`<div class="sec"><div class="sec-ttl">📊 RHIE</div>${rhieChart(dRhie)}</div>`;
+  h+=`<div class="sec"><div class="sec-ttl">💥 CONTACTOS</div>${svgBars({data:dCont,barKey:'contacts',barLabel:'Total contactos',barColor:'team'})}</div>`;
+  h+=`<div class="sec"><div class="sec-ttl">🔁 VUELTA AL JUEGO (BiG)</div>${bigChart(dBig)}</div>`;
 
   document.getElementById('mc').innerHTML=h;
   attachDrag();
 }
 
 // ══════════════════════════════════════════════════════════════════
-//  Inicialización: cargar TODAS las fechas con spinner
+//  Inicialización
 // ══════════════════════════════════════════════════════════════════
 (async function(){
-  // logo desde el repo (misma carpeta base que los datos)
   try{ document.getElementById('hdr-logo').src = BASE_URL.replace(/\/datos$/, '') + '/LOGO%20CASI%20SIN%20FONDO.png'; }catch(e){}
   const overlay=document.getElementById('loading-overlay');
   let ok=0;
