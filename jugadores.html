@@ -269,8 +269,8 @@ function tc(t){return t==='Primera'?'#1A7CC2':t==='Intermedia'?'#C47000':t==='Pr
 const TOTAL_COLOR = '#7B4FC0';
 function barClrFor(p){
   if(activeTeam==='total'){
-    if((p._nTeams||1) > 1) return TOTAL_COLOR;  // ese día jugó en 2+ equipos
-    return tc(p.team);                           // jugó en uno solo ese día
+    if((p._nTeams||1) > 1) return TOTAL_COLOR;   // ese día jugó en 2+ equipos
+    return tc(p._soloTeam||p.team);              // jugó en uno solo ese día
   }
   return tc(activeTeam);
 }
@@ -361,7 +361,11 @@ function playerSeries(name, team){
       const rival = rivalFor(e.key, rTeam, e.titulo);
       // ¿En cuántos equipos jugó EN ESTA FECHA? (claves de equipo, sin 'total')
       const teamsFecha = Object.keys(e.byTeam).filter(t=>t!=='total');
-      out.push({ ...rec, _fecha: e.label, _rival: rival, _ejelbl: axisLabel(e, rTeam), _key: e.key, _nTeams: teamsFecha.length });
+      // Equipo único de esa fecha (cuando jugó en uno solo). Tomado de la clave
+      // real de byTeam, que siempre es 'Primera'/'Intermedia'/'Pre A' válida —
+      // más confiable que rec.team, que a veces viene vacío en la lista total.
+      const soloTeam = teamsFecha.length===1 ? teamsFecha[0] : (rec.team||'');
+      out.push({ ...rec, _fecha: e.label, _rival: rival, _ejelbl: axisLabel(e, rTeam), _key: e.key, _nTeams: teamsFecha.length, _soloTeam: soloTeam });
     }
   });
   return out;
