@@ -877,15 +877,10 @@ function render(){
   const data = playerSeries(selectedPlayer, activeTeam); // cronológico
 
   const first = data[0] || (PLAYER_INDEX[selectedPlayer] && Object.values(PLAYER_INDEX[selectedPlayer][0].byTeam)[0]);
+  // La fila de chips (Puesto/GPS/Partidos/+30') se removió: esa info ya está en
+  // la tarjeta FIFA del resumen.
   const metaEl=document.getElementById('player-meta');
-  if(first){
-    const d30=data.filter(p=>p.total_mins>=30).length;
-    metaEl.innerHTML=`
-      <div class="pm-chip">Puesto: <b>${posLabel(first.position)}</b></div>
-      <div class="pm-chip">GPS: <b>${first.gps||'—'}</b></div>
-      <div class="pm-chip">Partidos: <b>${data.length}</b></div>
-      <div class="pm-chip">+30': <b>${d30}</b></div>`;
-  } else metaEl.innerHTML='';
+  if(metaEl) metaEl.innerHTML='';
 
   if(!data.length){
     document.getElementById('mc').innerHTML=`<div style="padding:30px;text-align:center;font-family:var(--fbc);color:#bbb">Sin datos para <b>${fmtName(selectedPlayer)}</b> en ${activeTeam==='total'?'TOTAL':activeTeam}.</div>`;
