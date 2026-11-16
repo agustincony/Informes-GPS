@@ -101,23 +101,23 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
 .summary-toggle{display:flex;gap:4px;margin-bottom:10px;justify-content:center}
 .fifa-wrap{display:flex;justify-content:center;padding:2px 0 10px}
 .fifa-card{
-  width:210px;position:relative;padding:11px 13px 34px 13px;font-family:var(--fbc);
+  width:210px;position:relative;padding:11px 13px 46px 13px;font-family:var(--fbc);
   box-shadow:0 8px 32px rgba(0,0,0,0.45);flex-shrink:0;
   background:
     repeating-conic-gradient(from 0deg at 50% 110%, rgba(255,255,255,0.07) 0deg, transparent 2deg, transparent 5deg, rgba(255,255,255,0.04) 6deg, transparent 8deg),
     linear-gradient(160deg, #f7e87a 0%, #d4a017 15%, #f0cc50 30%, #c8900a 45%, #f5d848 55%, #b8780a 70%, #e8c040 82%, #a06010 92%, #c8a030 100%);
-  clip-path:path('M 16 0 Q 0 0 0 16 L 0 338 Q 0 356 15 356 Q 84 356 105 378 Q 126 356 195 356 Q 210 356 210 338 L 210 16 Q 210 0 194 0 Z');
+  clip-path:path('M 16 0 Q 0 0 0 16 L 0 352 Q 0 370 15 370 Q 84 370 105 394 Q 126 370 195 370 Q 210 370 210 352 L 210 16 Q 210 0 194 0 Z');
 }
 .fc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
 .fc-num{font-family:var(--fbc);font-size:32px;font-weight:900;color:rgba(60,30,0,.75);line-height:1}
-.fc-pos{font-family:var(--fbc);font-size:8.5px;font-weight:700;color:rgba(60,30,0,.62);text-transform:uppercase;line-height:1.2;max-width:70px;margin-top:2px}
-.fc-logo{height:52px;width:52px;object-fit:contain}
+.fc-pos{font-family:var(--fbc);font-size:8.5px;font-weight:700;color:rgba(60,30,0,.62);text-transform:uppercase;line-height:1.2;max-width:62px;margin-top:2px}
+.fc-logo{height:54px;width:54px;object-fit:contain}
 .fc-pj{text-align:center}
-.fc-pj-v{font-family:var(--fbc);font-size:26px;font-weight:900;color:rgba(50,20,0,.9);line-height:1}
-.fc-pj-l{font-family:var(--fbc);font-size:8px;font-weight:700;color:rgba(80,38,0,.62);text-transform:uppercase}
-.fc-name{text-align:center;margin:6px 0;line-height:1.15;padding:5px 0;border-top:1px solid rgba(0,0,0,.14);border-bottom:1px solid rgba(0,0,0,.14)}
-.fc-first{font-family:var(--fbc);font-size:9px;font-weight:600;color:rgba(60,28,0,.65);text-transform:uppercase;letter-spacing:.8px;display:block}
-.fc-last{font-family:var(--fbc);font-size:14px;font-weight:900;color:rgba(50,20,0,.92);text-transform:uppercase;letter-spacing:1.3px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fc-pj-v{font-family:var(--fbc);font-size:21px;font-weight:900;color:rgba(50,20,0,.9);line-height:1}
+.fc-pj-l{font-family:var(--fbc);font-size:7.5px;font-weight:700;color:rgba(80,38,0,.62);text-transform:uppercase}
+.fc-name{text-align:center;margin:7px 0;line-height:1.15;padding:6px 0;border-top:1px solid rgba(0,0,0,.14);border-bottom:1px solid rgba(0,0,0,.14)}
+.fc-first{font-family:var(--fbc);font-size:11px;font-weight:600;color:rgba(60,28,0,.65);text-transform:uppercase;letter-spacing:.8px;display:block}
+.fc-last{font-family:var(--fbc);font-size:17px;font-weight:900;color:rgba(50,20,0,.92);text-transform:uppercase;letter-spacing:1.3px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px 3px;margin-top:4px}
 .fc-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:5px 3px;margin-top:4px;padding:0 16px}
 .fc-stat{display:flex;flex-direction:column;align-items:center}
@@ -262,17 +262,14 @@ function splitName(full){
 
 function f(v,d=0){return (+v).toFixed(d)}
 function tc(t){return t==='Primera'?'#1A7CC2':t==='Intermedia'?'#C47000':t==='Pre A'?'#3A8A2A':'#444'}
-// Color para barras. En TOTAL: violeta solo si el jugador jugó en más de un
-// equipo en el año; si jugó en uno solo, el color de ese equipo.
+// Color para barras. En TOTAL se decide POR FECHA: si en esa fecha jugó en más
+// de un equipo -> violeta; si jugó en uno solo -> color de ese equipo.
 const TOTAL_COLOR = '#7B4FC0';
-function totalColorFor(name){
-  const teams = playerTeams(name);          // equipos donde jugó (sin 'total')
-  if(teams.size > 1) return TOTAL_COLOR;     // multi-equipo -> violeta
-  const only = [...teams][0];                // jugó en uno solo
-  return only ? tc(only) : TOTAL_COLOR;
-}
 function barClrFor(p){
-  if(activeTeam==='total') return totalColorFor(selectedPlayer);
+  if(activeTeam==='total'){
+    if((p._nTeams||1) > 1) return TOTAL_COLOR;  // ese día jugó en 2+ equipos
+    return tc(p.team);                           // jugó en uno solo ese día
+  }
   return tc(activeTeam);
 }
 
@@ -360,7 +357,9 @@ function playerSeries(name, team){
       // modo total distingue cada semi (Alumni vs Newman, etc.).
       const rTeam = (team==='total') ? rec.team : team;
       const rival = rivalFor(e.key, rTeam, e.titulo);
-      out.push({ ...rec, _fecha: e.label, _rival: rival, _ejelbl: axisLabel(e, rTeam), _key: e.key });
+      // ¿En cuántos equipos jugó EN ESTA FECHA? (claves de equipo, sin 'total')
+      const teamsFecha = Object.keys(e.byTeam).filter(t=>t!=='total');
+      out.push({ ...rec, _fecha: e.label, _rival: rival, _ejelbl: axisLabel(e, rTeam), _key: e.key, _nTeams: teamsFecha.length });
     }
   });
   return out;
@@ -426,7 +425,7 @@ function svgBars({data, barKey, barLabel, barColor, dotsKey, dotsLabel,
     out+=`<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${W-pad.r}" y2="${y.toFixed(1)}" stroke="#EEEEEE" stroke-width="1"/>`;
     out+=`<text x="${pad.l-4}" y="${(y+3.5).toFixed(1)}" text-anchor="end" font-family="Barlow Condensed" font-size="8.5" fill="#CCCCCC">${lbl}</text>`;
   });
-  const lgdClr=barColor==='team'?(activeTeam==='total'?totalColorFor(selectedPlayer):tc(activeTeam)):(barColor||'#1A7CC2');
+  const lgdClr=barColor==='team'?(activeTeam==='total'?TOTAL_COLOR:tc(activeTeam)):(barColor||'#1A7CC2');
   out+=`<text x="${pad.l}" y="14" font-family="Barlow Condensed" font-size="9" fill="${lgdClr}">▪ ${barLabel}</text>`;
   if(dotsKey) out+=`<text x="${pad.l+120}" y="14" font-family="Barlow Condensed" font-size="9" fill="#555">● ${dotsLabel}</text>`;
 
@@ -755,11 +754,11 @@ function buildSummary(data){
         <div class="fc-num">${first.gps||'—'}</div>
         <div class="fc-pos">${posLabel(first.position||'')}</div>
       </div>
+      <img class="fc-logo" src="${LOGO_CASI}" alt="CASI">
       <div class="fc-pj">
         <div class="fc-pj-v">${nMatches}</div>
         <div class="fc-pj-l">Partidos</div>
       </div>
-      <img class="fc-logo" src="${LOGO_CASI}" alt="CASI">
     </div>
     <div class="fc-name">
       <span class="fc-first">${nombre||''}</span>
@@ -822,7 +821,11 @@ function renderPlayerMenu(q){
 }
 
 function openPlayerMenu(){
-  renderPlayerMenu(document.getElementById('player-input').value);
+  // Al abrir, mostrar SIEMPRE la lista completa (sin filtrar por el jugador
+  // ya elegido). Seleccionamos el texto para que al escribir se reemplace.
+  renderPlayerMenu('');
+  const inp=document.getElementById('player-input');
+  try{ inp.select(); }catch(e){}
   document.getElementById('player-menu').classList.add('open');
   menuOpen=true;
 }
