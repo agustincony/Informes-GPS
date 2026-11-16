@@ -101,12 +101,12 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
 .summary-toggle{display:flex;gap:4px;margin-bottom:10px;justify-content:center}
 .fifa-wrap{display:flex;justify-content:center;padding:2px 0 10px}
 .fifa-card{
-  width:210px;min-height:402px;box-sizing:border-box;position:relative;padding:11px 13px 30px 13px;font-family:var(--fbc);
+  width:210px;min-height:394px;box-sizing:border-box;position:relative;padding:11px 13px 28px 13px;font-family:var(--fbc);
   box-shadow:0 8px 32px rgba(0,0,0,0.45);flex-shrink:0;
   background:
     repeating-conic-gradient(from 0deg at 50% 110%, rgba(255,255,255,0.07) 0deg, transparent 2deg, transparent 5deg, rgba(255,255,255,0.04) 6deg, transparent 8deg),
     linear-gradient(160deg, #f7e87a 0%, #d4a017 15%, #f0cc50 30%, #c8900a 45%, #f5d848 55%, #b8780a 70%, #e8c040 82%, #a06010 92%, #c8a030 100%);
-  clip-path:path('M 16 0 Q 0 0 0 16 L 0 358 Q 0 376 15 376 Q 84 376 105 400 Q 126 376 195 376 Q 210 376 210 358 L 210 16 Q 210 0 194 0 Z');
+  clip-path:path('M 16 0 Q 0 0 0 16 L 0 350 Q 0 368 15 368 Q 84 368 105 392 Q 126 368 195 368 Q 210 368 210 350 L 210 16 Q 210 0 194 0 Z');
 }
 .fc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
 .fc-top > *{flex:1;display:flex}
@@ -120,12 +120,13 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
 .fc-name{text-align:center;margin:7px 0;line-height:1.15;padding:6px 0;border-top:1px solid rgba(0,0,0,.14);border-bottom:1px solid rgba(0,0,0,.14)}
 .fc-first{font-family:var(--fbc);font-size:11px;font-weight:600;color:rgba(60,28,0,.65);text-transform:uppercase;letter-spacing:.8px;display:block}
 .fc-last{font-family:var(--fbc);font-size:17px;font-weight:900;color:rgba(50,20,0,.92);text-transform:uppercase;letter-spacing:1.3px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px 3px;margin-top:6px}
-.fc-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:7px 3px;margin-top:6px;padding:0 16px}
+.fc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-top:11px}
+.fc-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-top:11px;padding:0 12px}
 .fc-stat{display:flex;flex-direction:column;align-items:center}
-.fc-sv{font-family:var(--fbc);font-size:16px;font-weight:900;color:rgba(60,30,0,.82);white-space:nowrap;line-height:1.15}
-.fc-sep{width:18px;height:1px;background:rgba(100,50,0,.2);margin:2px auto}
-.fc-sl{font-family:var(--fbc);font-size:8.5px;font-weight:700;color:rgba(80,38,0,.62);letter-spacing:.3px}
+.fc-sv{font-family:var(--fbc);font-size:20px;font-weight:900;color:rgba(42,21,0,.95);white-space:nowrap;line-height:1.05}
+.fc-sep{display:none}
+.fc-sl{font-family:var(--fbc);font-size:8px;font-weight:700;color:rgba(122,84,16,.85);letter-spacing:.3px;margin-top:1px}
+.fc-sepline{height:1px;background:rgba(0,0,0,.12);margin:11px 18px 0}
 .fifa-note{font-family:var(--fbc);font-size:9px;color:#bbb;text-align:center;margin-top:2px}
 </style>
 </head>
@@ -726,24 +727,26 @@ function buildSummary(data){
   // helpers de formato
   const km = v => v>=1000 ? (v/1000).toFixed(2)+'km' : Math.round(v)+'m';
 
-  // Stats de la tarjeta, según toggle (promedio o máximo).
-  // Vel Máx y % Vel máx también siguen el toggle.
+  // Stats de la tarjeta, según toggle (promedio o máximo). Layout 2-3-2-2.
+  // Unidades integradas en la etiqueta para no saturar el número.
+  const kmNum = v => v>=1000 ? (v/1000).toFixed(2) : Math.round(v)+'';
+  const kmLbl = v => v>=1000 ? 'Dist km' : 'Dist m';
+  const distV = agg('total_dist');
   const r1=[
     {v:Math.round(agg('total_mins'))+"'", l:'Mins'},
-    {v:f(agg('max_vel'),1), l:'Vel Máx'},
-    {v:f(agg('max_vel_pct'),0)+'%', l:'% Vel máx'},
+    {v:f(agg('max_vel'),1), l:'Vel Máx km/h'},
   ];
   const r2=[
-    {v:km(agg('total_dist')), l:'Dist'},
-    {v:Math.round(agg('ai18'))+'m', l:'HSR'},
-    {v:Math.round(agg('dt25'))+'m', l:'Sprint'},
+    {v:kmNum(distV), l:kmLbl(distV)},
+    {v:Math.round(agg('ai18'))+'', l:'HSR m'},
+    {v:Math.round(agg('dt25'))+'', l:'Sprint m'},
   ];
   const r3=[
     {v:Math.round(agg('accel_count'))+'', l:'Acel'},
     {v:Math.round(agg('decel_count'))+'', l:'Decel'},
   ];
   const r4=[
-    {v:Math.round(agg('contacts'))+'', l:'Cont.'},
+    {v:Math.round(agg('contacts'))+'', l:'Contactos'},
     {v:f(aggBig(),2)+'s', l:'BiG'},
   ];
   const stat = s => `<div class="fc-stat"><span class="fc-sv">${s.v}</span><div class="fc-sep"></div><span class="fc-sl">${s.l}</span></div>`;
@@ -768,8 +771,9 @@ function buildSummary(data){
       <span class="fc-first">${nombre||''}</span>
       <span class="fc-last">${apellido||selectedPlayer}</span>
     </div>
-    <div class="fc-grid">${r1.map(stat).join('')}</div>
+    <div class="fc-grid-2">${r1.map(stat).join('')}</div>
     <div class="fc-grid">${r2.map(stat).join('')}</div>
+    <div class="fc-sepline"></div>
     <div class="fc-grid-2">${r3.map(stat).join('')}</div>
     <div class="fc-grid-2">${r4.map(stat).join('')}</div>
   </div></div>`;
