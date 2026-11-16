@@ -101,29 +101,31 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
 .summary-toggle{display:flex;gap:4px;margin-bottom:10px;justify-content:center}
 .fifa-wrap{display:flex;justify-content:center;padding:2px 0 10px}
 .fifa-card{
-  width:210px;position:relative;padding:11px 13px 46px 13px;font-family:var(--fbc);
+  width:210px;position:relative;padding:11px 13px 62px 13px;font-family:var(--fbc);
   box-shadow:0 8px 32px rgba(0,0,0,0.45);flex-shrink:0;
   background:
     repeating-conic-gradient(from 0deg at 50% 110%, rgba(255,255,255,0.07) 0deg, transparent 2deg, transparent 5deg, rgba(255,255,255,0.04) 6deg, transparent 8deg),
     linear-gradient(160deg, #f7e87a 0%, #d4a017 15%, #f0cc50 30%, #c8900a 45%, #f5d848 55%, #b8780a 70%, #e8c040 82%, #a06010 92%, #c8a030 100%);
-  clip-path:path('M 16 0 Q 0 0 0 16 L 0 352 Q 0 370 15 370 Q 84 370 105 394 Q 126 370 195 370 Q 210 370 210 352 L 210 16 Q 210 0 194 0 Z');
+  clip-path:path('M 16 0 Q 0 0 0 16 L 0 388 Q 0 406 15 406 Q 84 406 105 432 Q 126 406 195 406 Q 210 406 210 388 L 210 16 Q 210 0 194 0 Z');
 }
 .fc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
-.fc-num{font-family:var(--fbc);font-size:32px;font-weight:900;color:rgba(60,30,0,.75);line-height:1}
-.fc-pos{font-family:var(--fbc);font-size:8.5px;font-weight:700;color:rgba(60,30,0,.62);text-transform:uppercase;line-height:1.2;max-width:62px;margin-top:2px}
-.fc-logo{height:54px;width:54px;object-fit:contain}
-.fc-pj{text-align:center}
-.fc-pj-v{font-family:var(--fbc);font-size:21px;font-weight:900;color:rgba(50,20,0,.9);line-height:1}
+.fc-top > *{flex:1;display:flex}
+.fc-pj{flex-direction:column;align-items:flex-start;text-align:left}
+.fc-logo-cell,.fc-top > img{justify-content:center}
+.fc-pos-wrap{justify-content:flex-end}
+.fc-pos{font-family:var(--fbc);font-size:10px;font-weight:700;color:rgba(60,30,0,.62);text-transform:uppercase;line-height:1.2;max-width:68px;text-align:right}
+.fc-logo{height:58px;width:58px;object-fit:contain;display:block;margin:0 auto}
+.fc-pj-v{font-family:var(--fbc);font-size:22px;font-weight:900;color:rgba(50,20,0,.9);line-height:1}
 .fc-pj-l{font-family:var(--fbc);font-size:7.5px;font-weight:700;color:rgba(80,38,0,.62);text-transform:uppercase}
 .fc-name{text-align:center;margin:7px 0;line-height:1.15;padding:6px 0;border-top:1px solid rgba(0,0,0,.14);border-bottom:1px solid rgba(0,0,0,.14)}
 .fc-first{font-family:var(--fbc);font-size:11px;font-weight:600;color:rgba(60,28,0,.65);text-transform:uppercase;letter-spacing:.8px;display:block}
 .fc-last{font-family:var(--fbc);font-size:17px;font-weight:900;color:rgba(50,20,0,.92);text-transform:uppercase;letter-spacing:1.3px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.fc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px 3px;margin-top:4px}
-.fc-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:5px 3px;margin-top:4px;padding:0 16px}
+.fc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px 3px;margin-top:6px}
+.fc-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:7px 3px;margin-top:6px;padding:0 16px}
 .fc-stat{display:flex;flex-direction:column;align-items:center}
-.fc-sv{font-family:var(--fbc);font-size:13px;font-weight:900;color:rgba(60,30,0,.78);white-space:nowrap;line-height:1.15}
-.fc-sep{width:16px;height:1px;background:rgba(100,50,0,.2);margin:2px auto}
-.fc-sl{font-family:var(--fbc);font-size:7.5px;font-weight:700;color:rgba(80,38,0,.62);letter-spacing:.3px}
+.fc-sv{font-family:var(--fbc);font-size:16px;font-weight:900;color:rgba(60,30,0,.82);white-space:nowrap;line-height:1.15}
+.fc-sep{width:18px;height:1px;background:rgba(100,50,0,.2);margin:2px auto}
+.fc-sl{font-family:var(--fbc);font-size:8.5px;font-weight:700;color:rgba(80,38,0,.62);letter-spacing:.3px}
 .fifa-note{font-family:var(--fbc);font-size:9px;color:#bbb;text-align:center;margin-top:2px}
 </style>
 </head>
@@ -712,8 +714,6 @@ function buildSummary(data){
   const agg = (k)=> summaryMode==='avg' ? avg(base,k) : Math.max(...base.map(p=>+p[k]||0));
   // BiG: menor es mejor -> en modo máximo mostramos el MÍNIMO
   const aggBig = ()=> summaryMode==='avg' ? avg(base,'big_avg_time') : Math.min(...base.map(p=>+p.big_avg_time||0).filter(v=>v>0));
-  const velSeason = Math.max(...data.map(p=>+p.max_vel||0));       // vel máx absoluta del año
-  const velPctSeason = Math.max(...data.map(p=>+p.max_vel_pct||0));
 
   // Datos de identidad (del primer registro disponible)
   const first = base[0] || data[0] || {};
@@ -722,11 +722,12 @@ function buildSummary(data){
   // helpers de formato
   const km = v => v>=1000 ? (v/1000).toFixed(2)+'km' : Math.round(v)+'m';
 
-  // Stats de la tarjeta (mismas que el resumen anterior), según toggle
+  // Stats de la tarjeta, según toggle (promedio o máximo).
+  // Vel Máx y % Vel máx también siguen el toggle.
   const r1=[
     {v:Math.round(agg('total_mins'))+"'", l:'Mins'},
-    {v:f(velSeason,1), l:'Vel Máx'},
-    {v:f(velPctSeason,0)+'%', l:'% Vel máx'},
+    {v:f(agg('max_vel'),1), l:'Vel Máx'},
+    {v:f(agg('max_vel_pct'),0)+'%', l:'% Vel máx'},
   ];
   const r2=[
     {v:km(agg('total_dist')), l:'Dist'},
@@ -750,14 +751,13 @@ function buildSummary(data){
 
   const card=`<div class="fifa-wrap"><div class="fifa-card">
     <div class="fc-top">
-      <div>
-        <div class="fc-num">${first.gps||'—'}</div>
-        <div class="fc-pos">${posLabel(first.position||'')}</div>
-      </div>
-      <img class="fc-logo" src="${LOGO_CASI}" alt="CASI">
       <div class="fc-pj">
         <div class="fc-pj-v">${nMatches}</div>
         <div class="fc-pj-l">Partidos</div>
+      </div>
+      <img class="fc-logo" src="${LOGO_CASI}" alt="CASI">
+      <div class="fc-pos-wrap">
+        <div class="fc-pos">${posLabel(first.position||'')}</div>
       </div>
     </div>
     <div class="fc-name">
@@ -770,7 +770,7 @@ function buildSummary(data){
     <div class="fc-grid-2">${r4.map(stat).join('')}</div>
   </div></div>`;
 
-  const note = (summaryMode==='avg'?'Promedios':'Máximos') + ' sobre partidos de +30 min · Vel Máx = mejor del año · BiG: menor es mejor';
+  const note = (summaryMode==='avg'?'Promedios':'Máximos') + ' sobre partidos de +30 min · BiG: menor es mejor';
   return toggle+card+`<div class="fifa-note">${note}</div>`;
 }
 
