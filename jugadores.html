@@ -173,6 +173,19 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
 
 <div class="player-meta" id="player-meta"></div>
 <div id="mc"></div>
+
+<button id="dbg-pos-btn" onclick="showPuestos()" style="position:fixed;bottom:14px;right:14px;z-index:500;background:#1A7CC2;color:#fff;font-family:var(--fbc);font-weight:700;font-size:12px;border:none;border-radius:16px;padding:9px 14px;box-shadow:0 3px 10px rgba(0,0,0,.25);cursor:pointer">Ver puestos</button>
+<div id="dbg-pos-modal" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.5);padding:20px 10px;overflow-y:auto">
+  <div style="max-width:460px;margin:0 auto;background:#fff;border-radius:10px;padding:14px">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+      <b style="font-family:var(--fbc);font-size:15px;flex:1">Puestos por jugador</b>
+      <button onclick="copyPuestos()" style="background:#2E7D32;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-family:var(--fbc);font-weight:700;font-size:11px;cursor:pointer">Copiar</button>
+      <button onclick="document.getElementById('dbg-pos-modal').style.display='none'" style="background:#999;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-family:var(--fbc);font-weight:700;font-size:11px;cursor:pointer">Cerrar</button>
+    </div>
+    <textarea id="dbg-pos-text" readonly style="width:100%;height:60vh;font-family:monospace;font-size:11px;border:1px solid #ccc;border-radius:6px;padding:8px;white-space:pre"></textarea>
+  </div>
+</div>
+
 <div class="footer">CASI · Resumen anual GPS 2026 · PF Agustín Cony</div>
 
 <div id="loading-overlay">
@@ -870,6 +883,42 @@ function selectPlayer(name){
   if(activeTeam!=='total' && !teams.has(activeTeam)) activeTeam='total';
   refreshTeamTabs();
   render();
+}
+
+// ── Panel temporal: puestos por jugador en TODAS las fechas cargadas ──
+function buildPuestosText(){
+  const names = Object.keys(PLAYER_INDEX).sort((a,b)=>splitName(a).apellido.localeCompare(splitName(b).apellido));
+  const lines = [];
+  names.forEach(name=>{
+    const entries = PLAYER_INDEX[name]||[];
+    const gpsSet = new Set();
+    const posSet = new Set();
+    const detalle = [];
+    entries.forEach(e=>{
+      ['Primera','Intermedia','Pre A'].forEach(team=>{
+        const rec = e.byTeam[team];
+        if(rec){
+          if(rec.gps!=null) gpsSet.add(rec.gps);
+          if(rec.position) posSet.add(rec.position);
+          detalle.push(`${e.label}:${rec.position||'?'}(${team})`);
+        }
+      });
+    });
+    const gps = [...gpsSet].join('/')||'—';
+    const puestos = [...posSet].join(' / ')||'?';
+    lines.push(`${name} [GPS ${gps}] -> ${puestos}`);
+    lines.push(`    ${detalle.join(' · ')}`);
+  });
+  return lines.join('\n');
+}
+function showPuestos(){
+  document.getElementById('dbg-pos-text').value = buildPuestosText();
+  document.getElementById('dbg-pos-modal').style.display='block';
+}
+function copyPuestos(){
+  const ta=document.getElementById('dbg-pos-text');
+  ta.select();
+  try{ navigator.clipboard.writeText(ta.value); }catch(e){ document.execCommand('copy'); }
 }
 
 function render(){
