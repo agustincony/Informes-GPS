@@ -715,10 +715,10 @@ function buildSummary(data){
   const base = d30.length?d30:data;
   const nMatches = data.length; // partidos TOTALES jugados
 
-  // promedio o máximo de un campo sobre base (+30 min)
-  const agg = (k)=> summaryMode==='avg' ? avg(base,k) : Math.max(...base.map(p=>+p[k]||0));
-  // BiG: menor es mejor -> en modo máximo mostramos el MÍNIMO
-  const aggBig = ()=> summaryMode==='avg' ? avg(base,'big_avg_time') : Math.min(...base.map(p=>+p.big_avg_time||0).filter(v=>v>0));
+  // Promedio: sobre partidos +30 min (base). Máximo: sobre TODOS los partidos (data).
+  const agg = (k)=> summaryMode==='avg' ? avg(base,k) : Math.max(...data.map(p=>+p[k]||0));
+  // BiG: menor es mejor -> en modo máximo mostramos el MÍNIMO (sobre todos)
+  const aggBig = ()=> summaryMode==='avg' ? avg(base,'big_avg_time') : Math.min(...data.map(p=>+p.big_avg_time||0).filter(v=>v>0));
 
   // Datos de identidad (del primer registro disponible)
   const first = base[0] || data[0] || {};
@@ -778,7 +778,7 @@ function buildSummary(data){
     <div class="fc-grid-2">${r4.map(stat).join('')}</div>
   </div></div>`;
 
-  const note = (summaryMode==='avg'?'Promedios':'Máximos') + ' sobre partidos de +30 min · BiG: menor es mejor';
+  const note = (summaryMode==='avg'?'Promedios sobre partidos de +30 min':'Máximos sobre todos los partidos') + ' · BiG: menor es mejor';
   return toggle+card+`<div class="fifa-note">${note}</div>`;
 }
 
