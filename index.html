@@ -1030,7 +1030,22 @@ function render(){
     document.getElementById('hdr-title').textContent=m.titulo;
     document.getElementById('hdr-sub').textContent=m.subtitulo+' ▾';
     document.getElementById('footer-txt').textContent=m.footer;
-    const sc=getScores()['Primera']||{};
+    activeTeam = m.defaultTeam || 'Primera';
+    activeGrps = new Set(['all']);
+    sortMode = 'group';
+
+    document.querySelectorAll('#team-tabs .ftab').forEach((b,i)=>{
+      b.classList.remove('ap','ai','aa');
+      const tmap = ['total','Primera','Intermedia','Pre A'];
+      if(tmap[i] === activeTeam) {
+        b.classList.add(
+          activeTeam === 'Primera' ? 'ap' :
+          activeTeam === 'Intermedia' ? 'ai' : 'aa'
+        );
+      }
+    });
+
+    const sc = getScores()[activeTeam] || getScores().total || {};
     document.getElementById('hdr-score').innerHTML=(sc.casi!==undefined?sc.casi:'–')+'<span class="sep">–</span>'+(sc.rival!==undefined?sc.rival:'–');
     document.getElementById('hdr-label').innerHTML=sc.label?'<b class="'+(sc.label==='DERROTA'?'loss':'win')+'">'+sc.label+'</b>':'&nbsp;';
     render();
