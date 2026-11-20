@@ -142,10 +142,12 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
   <div>
     <div class="flt-lbl">VISTA</div>
     <div class="flt-row" id="day-tabs">
-      <div class="ftab ap" onclick="setDay('total',this)">TOTAL</div>
-      <div class="ftab" onclick="setDay('sab',this)">SÁB</div>
-      <div class="ftab" onclick="setDay('dom',this)">DOM</div>
+      <!-- populated by buildDayTabs() -->
     </div>
+  </div>
+  <div id="match-tabs-row" style="display:none">
+    <div class="flt-lbl">PARTIDO</div>
+    <div class="prow" id="match-tabs"></div>
   </div>
   <div>
     <div class="flt-lbl">ORDENAR</div>
@@ -210,16 +212,22 @@ const LIMITS = {
 };
 
 // ─── ESTADO ────────────────────────────────────────────────────────────────
-let MATCHES = [];        // { key, day, rival, casiScore, rivalScore, data }
-let activeView = 'total'; // 'total' | 'sab' | 'dom' | matchKey
+let MATCHES = [];
+let activeView = 'total';
 let sortMode = 'group';
 let velMode = 'abs';
+let distMode = 'total';    // 'total' | 'mpm'
+let hsrMode = 'abs';       // 'abs' | 'pct'
+let sprintMode = 'dist';   // 'dist' | 'count' | 'exp'
+let accBandMode = 'b3';    // 'b3' | 'b25'
+let contactMode = 'total'; // 'total' | 'min'
+let efExpMode = 'count';   // 'count' | 'min'
 let viewMode = 'stats';
 let bigViewMode = 'stacked';
 let selectedPlayer = '';
 
-// ─── HELPERS (mismos que index.html) ───────────────────────────────────────
-function tc(){ return '#1A7CC2'; } // Seven = un solo equipo, azul siempre
+// ─── HELPERS ───────────────────────────────────────────────────────────────
+function tc(){ return '#1A7CC2'; }
 function f(v,d=0){ return (+v).toFixed(d); }
 function avg(arr,k){ return arr.length?arr.reduce((s,p)=>s+p[k],0)/arr.length:0; }
 
@@ -269,11 +277,9 @@ function csvNameToNormal(csvName){
 }
 
 function parseMatchKey(filename){
-  // sab-Newman-28-14.csv  o  dom-Alumni-7-21.csv
   const base=filename.replace('.csv','');
   const parts=base.split('-');
-  const day=parts[0].toLowerCase(); // 'sab' o 'dom'
-  // rival puede tener guiones, score son los últimos 2
+  const day=parts[0].toLowerCase();
   const casiScore=parts[parts.length-2];
   const rivalScore=parts[parts.length-1];
   const rival=parts.slice(1,parts.length-2).join(' ');
@@ -308,12 +314,15 @@ function parseCSV(text){
       sprint_count:parseEuro(row[C.sprintN]),
       max_vel:parseEuro(row[C.velMax]),
       max_vel_pct:parseEuro(row[C.velMaxPct]),
-      accel_count:parseEuro(row[C.acc25]),
-      decel_count:parseEuro(row[C.dec25]),
+      accel_count:parseEuro(row[C.acc25]),   // banda ≥2.5 m/s²
+      decel_count:parseEuro(row[C.dec25]),   // banda ≥2.5 m/s²
+      accel_b3:parseEuro(row[C.accB3]),      // banda ≥3.0 m/s²
+      decel_b3:parseEuro(row[C.decB3]),      // banda ≥3.0 m/s²
       rhie:parseEuro(row[C.rhie]),
       rhie_mean:parseEuro(row[C.rhie]),
       rhie_max:parseEuro(row[C.rhie]),
       contacts:parseEuro(row[C.contactos]),
+      contacts_min:parseEuro(row[C.contactosMin]),
       big_avg_time:bigVal,
       big_total:bigVal>0?1:0,
       big_sum_time:bigVal,
@@ -324,6 +333,8 @@ function parseCSV(text){
       sprint_dist:parseEuro(row[C.sprintDist]),
       hsr_val:parseEuro(row[C.hsr]),
       mts_min:parseEuro(row[C.mtsMin]),
+      ef_exp:parseEuro(row[C.efExp]),
+      ef_exp_min:parseEuro(row[C.efExpMin]),
     };
     players.push(p);
   }
@@ -346,6 +357,8 @@ function getCumulative(dayFilter){
         acc.dt25+=p.dt25;
         acc.accel_count+=p.accel_count;
         acc.decel_count+=p.decel_count;
+        acc.accel_b3+=p.accel_b3;
+        acc.decel_b3+=p.decel_b3;
         acc.contacts+=p.contacts;
         acc.total_mins+=p.total_mins;
         acc.rhie+=p.rhie;
@@ -358,6 +371,7 @@ function getCumulative(dayFilter){
         acc.pl+=p.pl;
         acc.dist_exp+=p.dist_exp;
         acc.hsr_val+=p.hsr_val;
+        acc.ef_exp+=p.ef_exp;
         acc.max_vel=Math.max(acc.max_vel,p.max_vel);
         acc.max_vel_pct=Math.max(acc.max_vel_pct,p.max_vel_pct);
         acc._rhiePeak=Math.max(acc._rhiePeak,p.rhie);
@@ -372,8 +386,11 @@ function getCumulative(dayFilter){
     big_avg_time:p.big_total>0?p.big_sum_time/p.big_total:0,
     pl_min:p.total_mins>0?p.pl/p.total_mins:0,
     mts_min:p.total_mins>0?p.total_dist/p.total_mins:0,
+    contacts_min:p.total_mins>0?p.contacts/p.total_mins:0,
+    ef_exp_min:p.total_mins>0?p.ef_exp/p.total_mins:0,
     rhie_mean:p._matchCount>0?p.rhie/p._matchCount:0,
     rhie_max:p._rhiePeak||p.rhie,
+    sprint_dist:p.dt25,
   }));
 }
 
@@ -418,7 +435,7 @@ function buildERU(data){
     </div>`).join('')+'</div>';
 }
 
-// ─── CHART FUNCTIONS (verbatim de index.html) ──────────────────────────────
+// ─── CHART FUNCTIONS ───────────────────────────────────────────────────────
 function svgBars({data,barKey,barLabel,barColor,dotsKey,dotsLabel,dotsColor,
                   dotsFormat,barFormat,nameAngle=-50,fullN=0}){
   const n=data.length;
@@ -450,7 +467,6 @@ function svgBars({data,barKey,barLabel,barColor,dotsKey,dotsLabel,dotsColor,
   out+=`<text x="${pad.l}" y="14" font-family="Barlow Condensed" font-size="9" fill="#1A7CC2">▪ ${barLabel}</text>`;
   if(dotsKey) out+=`<text x="${pad.l+90}" y="14" font-family="Barlow Condensed" font-size="9" fill="#555">● ${dotsLabel}</text>`;
   const pts=[];
-  const nameRad=(nameAngle*Math.PI)/180;
   data.forEach((p,i)=>{
     const cx=pad.l+(i+0.5)*slotW;
     const bh=Math.max((+p[barKey]/maxBar)*chartH,2);
@@ -481,6 +497,12 @@ function svgBars({data,barKey,barLabel,barColor,dotsKey,dotsLabel,dotsColor,
   return `<div class="cso"><svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${out}</svg></div>`;
 }
 
+// Bloque 2: minutos jugados
+function minChart(data){
+  const sorted=[...data].sort((a,b)=>b.total_mins-a.total_mins);
+  return svgBars({data:sorted,barKey:'total_mins',barLabel:'Minutos jugados',barFormat:v=>f(v,0),fullN:data.length});
+}
+
 function velChart(data){
   const sorted=byGroup(data,velMode==='abs'?'max_vel':'max_vel_pct');
   const key=velMode==='abs'?'max_vel':'max_vel_pct';
@@ -488,35 +510,71 @@ function velChart(data){
   const fmt=velMode==='abs'?v=>f(v,2):v=>f(v,1)+'%';
   return `
     <div class="chart-toggle">
-      <div class="ctab ${velMode==='abs'?'active':''}" onclick="velMode='abs';renderVelChart()">km/h</div>
-      <div class="ctab ${velMode==='pct'?'active':''}" onclick="velMode='pct';renderVelChart()">% V.Máx</div>
+      <div class="ctab ${velMode==='abs'?'active':''}" onclick="velMode='abs';render()">km/h</div>
+      <div class="ctab ${velMode==='pct'?'active':''}" onclick="velMode='pct';render()">% V.Máx</div>
     </div>
-    <div id="vel-chart-inner">${svgBars({data:sorted,barKey:key,barLabel:label,barColor:'team',barFormat:fmt,fullN:data.length})}</div>`;
-}
-function renderVelChart(){
-  const data=getDataset();
-  const sorted=byGroup(data,velMode==='abs'?'max_vel':'max_vel_pct');
-  const key=velMode==='abs'?'max_vel':'max_vel_pct';
-  const label=velMode==='abs'?'km/h':'% V.Máx';
-  const fmt=velMode==='abs'?v=>f(v,2):v=>f(v,1)+'%';
-  document.querySelectorAll('.ctab').forEach(b=>{
-    b.classList.toggle('active',b.textContent.trim()===(velMode==='abs'?'km/h':'% V.Máx'));
-  });
-  document.getElementById('vel-chart-inner').innerHTML=svgBars({
-    data:sorted,barKey:key,barLabel:label,barColor:'team',barFormat:fmt,fullN:data.length
-  });
-  attachDrag();
+    ${svgBars({data:sorted,barKey:key,barLabel:label,barFormat:fmt,fullN:data.length})}`;
 }
 
+// Distancia con toggle total / m·min
+function distChart(data){
+  const toggle=`<div class="chart-toggle">
+    <div class="ctab ${distMode==='total'?'active':''}" onclick="distMode='total';render()">Distancia total</div>
+    <div class="ctab ${distMode==='mpm'?'active':''}" onclick="distMode='mpm';render()">m/min</div>
+  </div>`;
+  if(distMode==='total'){
+    return toggle+svgBars({data:byGroup(data,'total_dist'),barKey:'total_dist',barLabel:'Distancia (m)',fullN:data.length});
+  } else {
+    return toggle+svgBars({data:byGroup(data,'avg_mpm'),barKey:'avg_mpm',barLabel:'m/min',barFormat:v=>f(v,1),fullN:data.length});
+  }
+}
+
+// HSR con toggle abs / %
+function hsrChart(data){
+  const toggle=`<div class="chart-toggle">
+    <div class="ctab ${hsrMode==='abs'?'active':''}" onclick="hsrMode='abs';render()">metros</div>
+    <div class="ctab ${hsrMode==='pct'?'active':''}" onclick="hsrMode='pct';render()">%</div>
+  </div>`;
+  if(hsrMode==='abs'){
+    return toggle+svgBars({data:byGroup(data,'ai18'),barKey:'ai18',barLabel:'>18 km/h (m)',fullN:data.length});
+  } else {
+    return toggle+svgBars({data:byGroup(data,'ai_pct'),barKey:'ai_pct',barLabel:'HSR %',barFormat:v=>f(v,1)+'%',fullN:data.length});
+  }
+}
+
+// Sprint con toggle: distancia / cantidad / +80% distancia
+function sprintChart(data){
+  const toggle=`<div class="chart-toggle">
+    <div class="ctab ${sprintMode==='dist'?'active':''}" onclick="sprintMode='dist';render()">Distancia</div>
+    <div class="ctab ${sprintMode==='count'?'active':''}" onclick="sprintMode='count';render()">Nº sprints</div>
+    <div class="ctab ${sprintMode==='exp'?'active':''}" onclick="sprintMode='exp';render()">+80% dist.</div>
+  </div>`;
+  if(sprintMode==='dist'){
+    return toggle+svgBars({data:byGroup(data,'dt25'),barKey:'dt25',barLabel:'>25 km/h (m)',fullN:data.length});
+  } else if(sprintMode==='count'){
+    return toggle+svgBars({data:byGroup(data,'sprint_count'),barKey:'sprint_count',barLabel:'Nº sprints',barFormat:v=>Math.round(v)+'',fullN:data.length});
+  } else {
+    return toggle+svgBars({data:byGroup(data,'dist_exp'),barKey:'dist_exp',barLabel:'>80% V.Máx (m)',fullN:data.length});
+  }
+}
+
+// Acc/Dec con toggle banda 3 / banda 2.5
 function accelChart(data){
-  const dataWithSum=data.filter(p=>p.accel_count>0||p.decel_count>0).map(p=>({...p,accel_sum:p.accel_count+p.decel_count}));
+  const accKey=accBandMode==='b3'?'accel_b3':'accel_count';
+  const decKey=accBandMode==='b3'?'decel_b3':'decel_count';
+  const bandLabel=accBandMode==='b3'?'Banda ≥3 m/s²':'Banda ≥2.5 m/s²';
+  const toggle=`<div class="chart-toggle">
+    <div class="ctab ${accBandMode==='b3'?'active':''}" onclick="accBandMode='b3';render()">Banda ≥3</div>
+    <div class="ctab ${accBandMode==='b25'?'active':''}" onclick="accBandMode='b25';render()">Banda ≥2.5</div>
+  </div>`;
+  const dataWithSum=data.map(p=>({...p,accel_sum:p[accKey]+p[decKey]}));
   const sorted=byGroup(dataWithSum,'accel_sum');
-  if(!sorted.length) return '<p style="color:#ccc;font-family:var(--fbc);text-align:center;padding:14px">Sin datos</p>';
+  if(!sorted.length) return toggle+'<p style="color:#ccc;font-family:var(--fbc);text-align:center;padding:14px">Sin datos</p>';
   const n=sorted.length;
   const slotW=18,nameH=46,pad={t:22,r:8,b:6,l:38},chartH=148,H=pad.t+chartH+nameH+pad.b;
   const W=Math.max(n*slotW+pad.l+pad.r,460);
   const barW=4.5,gap=0.5;
-  const maxV=Math.max(...sorted.map(p=>Math.max(p.accel_count,p.decel_count)));
+  const maxV=Math.max(...sorted.map(p=>Math.max(p[accKey],p[decKey])),0.01);
   const yBase=pad.t+chartH;
   let out='';
   out+=`<rect x="0" y="0" width="${W}" height="${H}" fill="#FFFFFF"/>`;
@@ -525,23 +583,23 @@ function accelChart(data){
     out+=`<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${W-pad.r}" y2="${y.toFixed(1)}" stroke="#EEEEEE" stroke-width="1"/>`;
     out+=`<text x="${pad.l-4}" y="${(y+3.5).toFixed(1)}" text-anchor="end" font-family="Barlow Condensed" font-size="8.5" fill="#CCCCCC">${v}</text>`;
   });
-  out+=`<text x="${pad.l}" y="14" font-family="Barlow Condensed" font-size="9" fill="#1A7CC2">▪ Aceleraciones</text>`;
-  out+=`<text x="${pad.l+100}" y="14" font-family="Barlow Condensed" font-size="9" fill="#E05050">▪ Desaceleraciones</text>`;
+  out+=`<text x="${pad.l}" y="14" font-family="Barlow Condensed" font-size="9" fill="#1A7CC2">▪ Acelerac. ${bandLabel}</text>`;
+  out+=`<text x="${pad.l+140}" y="14" font-family="Barlow Condensed" font-size="9" fill="#E05050">▪ Desacelerac.</text>`;
   sorted.forEach((p,i)=>{
     const cx=pad.l+(i+0.5)*slotW;
     const x0=cx-barW-gap;
-    const bha=Math.max((p.accel_count/maxV)*chartH,2);
+    const bha=Math.max((p[accKey]/maxV)*chartH,2);
     const bya=yBase-bha;
     out+=`<rect x="${x0.toFixed(1)}" y="${bya.toFixed(1)}" width="${barW.toFixed(1)}" height="${bha.toFixed(1)}" fill="#1A7CC2" opacity="0.88" rx="2"/>`;
-    out+=`<text x="${(x0+barW/2).toFixed(1)}" y="${(bya-2).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="8" fill="#333">${Math.round(p.accel_count)}</text>`;
+    out+=`<text x="${(x0+barW/2).toFixed(1)}" y="${(bya-2).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="8" fill="#333">${Math.round(p[accKey])}</text>`;
     const x1=cx+gap;
-    const bhd=Math.max((p.decel_count/maxV)*chartH,2);
+    const bhd=Math.max((p[decKey]/maxV)*chartH,2);
     const byd=yBase-bhd;
     out+=`<rect x="${x1.toFixed(1)}" y="${byd.toFixed(1)}" width="${barW.toFixed(1)}" height="${bhd.toFixed(1)}" fill="#E05050" opacity="0.88" rx="2"/>`;
-    out+=`<text x="${(x1+barW/2).toFixed(1)}" y="${(byd-2).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="8" fill="#333">${Math.round(p.decel_count)}</text>`;
+    out+=`<text x="${(x1+barW/2).toFixed(1)}" y="${(byd-2).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="8" fill="#333">${Math.round(p[decKey])}</text>`;
     out+=`<text x="${cx.toFixed(1)}" y="${(yBase+5).toFixed(1)}" text-anchor="end" font-family="Barlow Condensed" font-size="9.5" fill="#444" font-weight="600" transform="rotate(-55,${cx.toFixed(1)},${(yBase+5).toFixed(1)})">${fmtName(p.name)}</text>`;
   });
-  return `<div class="cso"><svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${out}</svg></div>`;
+  return toggle+`<div class="cso"><svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${out}</svg></div>`;
 }
 
 function rhieChart(data){
@@ -580,10 +638,35 @@ function rhieChart(data){
   return `<div class="cso"><svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">${out}</svg></div>`;
 }
 
+// Contactos con toggle total / x min
+function contactChart(data){
+  const toggle=`<div class="chart-toggle">
+    <div class="ctab ${contactMode==='total'?'active':''}" onclick="contactMode='total';render()">Total</div>
+    <div class="ctab ${contactMode==='min'?'active':''}" onclick="contactMode='min';render()">x min</div>
+  </div>`;
+  if(contactMode==='total'){
+    return toggle+svgBars({data:byGroup(data,'contacts'),barKey:'contacts',barLabel:'Total contactos',barFormat:v=>Math.round(v)+'',fullN:data.length});
+  } else {
+    return toggle+svgBars({data:byGroup(data,'contacts_min'),barKey:'contacts_min',barLabel:'Contactos/min',barFormat:v=>f(v,2),fullN:data.length});
+  }
+}
+
+// Esfuerzos explosivos con toggle total / por min
+function efExpChart(data){
+  const toggle=`<div class="chart-toggle">
+    <div class="ctab ${efExpMode==='count'?'active':''}" onclick="efExpMode='count';render()">Total</div>
+    <div class="ctab ${efExpMode==='min'?'active':''}" onclick="efExpMode='min';render()">por min</div>
+  </div>`;
+  if(efExpMode==='count'){
+    return toggle+svgBars({data:byGroup(data,'ef_exp'),barKey:'ef_exp',barLabel:'Esf. explosivos',barFormat:v=>Math.round(v)+'',fullN:data.length});
+  } else {
+    return toggle+svgBars({data:byGroup(data,'ef_exp_min'),barKey:'ef_exp_min',barLabel:'Esf. exp./min',barFormat:v=>f(v,2),fullN:data.length});
+  }
+}
+
 function bigChart(data){
   const sorted=byGroup(data.filter(p=>p.big_total>0),'big_avg_time',true);
   if(!sorted.length) return '<p style="color:#ccc;font-family:var(--fbc);text-align:center;padding:14px">Sin datos</p>';
-  const totalBiG=sorted.reduce((s,p)=>s+p.big_total,0);
   const teamAvgTime=sorted.reduce((s,p)=>s+p.big_avg_time,0)/sorted.length;
   const maxT=sorted[0].big_total;
   const toggle=`<div style="display:flex;gap:4px;margin-bottom:8px">
@@ -692,16 +775,16 @@ function velPodium(data){
 
 function buildKPIs(data){
   if(!data.length) return '';
-  const data30=data.filter(p=>p.total_mins>=10); // Seven = partido + corto
-  const d=data30.length?data30:data;
+  const d=data.filter(p=>p.total_mins>=10);
+  const dd=d.length?d:data;
   const kpis=[
-    {lbl:'DISTANCIA', v:f(avg(d,'total_dist')/1000,2)+'<span class="kpi-u">km</span>'},
-    {lbl:'ALTA INT.', v:Math.round(avg(d,'ai18'))+'<span class="kpi-u">m</span>'},
-    {lbl:'SPRINT', v:Math.round(avg(d,'dt25'))+'<span class="kpi-u">m</span>'},
-    {lbl:'ACELERAC.', v:Math.round(avg(d,'accel_count'))+''},
-    {lbl:'DESACELER.', v:Math.round(avg(d,'decel_count'))+''},
-    {lbl:'CONTACTOS', v:Math.round(avg(d,'contacts'))+''},
-    {lbl:'BiG AVG', v:f(avg(d,'big_avg_time'),2)+'<span class="kpi-u">s</span>'},
+    {lbl:'DISTANCIA', v:f(avg(dd,'total_dist')/1000,2)+'<span class="kpi-u">km</span>'},
+    {lbl:'ALTA INT.', v:Math.round(avg(dd,'ai18'))+'<span class="kpi-u">m</span>'},
+    {lbl:'SPRINT', v:Math.round(avg(dd,'dt25'))+'<span class="kpi-u">m</span>'},
+    {lbl:'ACELERAC.', v:Math.round(avg(dd,'accel_count'))+''},
+    {lbl:'DESACELER.', v:Math.round(avg(dd,'decel_count'))+''},
+    {lbl:'CONTACTOS', v:Math.round(avg(dd,'contacts'))+''},
+    {lbl:'BiG AVG', v:f(avg(dd,'big_avg_time'),2)+'<span class="kpi-u">s</span>'},
   ];
   return `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
     ${kpis.map(k=>`<div class="kpi"><div class="kpi-lbl">${k.lbl}</div><div class="kpi-v">${k.v}</div></div>`).join('')}
@@ -774,6 +857,36 @@ function selectFutPlayer(name){
   if(cs) cs.innerHTML=buildCards(getDataset());
 }
 
+// ─── BOTONERA DINÁMICA ─────────────────────────────────────────────────────
+function buildDayTabs(){
+  const hasSab=MATCHES.some(m=>m.day==='sab');
+  const hasDom=MATCHES.some(m=>m.day==='dom');
+  const dayTabsEl=document.getElementById('day-tabs');
+  let dayHtml=`<div class="ftab ap" data-day="total" onclick="setDay('total',this)">TOT</div>`;
+  if(hasSab) dayHtml+=`<div class="ftab" data-day="sab" onclick="setDay('sab',this)">SÁB</div>`;
+  if(hasDom) dayHtml+=`<div class="ftab" data-day="dom" onclick="setDay('dom',this)">DOM</div>`;
+  dayTabsEl.innerHTML=dayHtml;
+
+  if(MATCHES.length>0){
+    const sabMatches=MATCHES.filter(m=>m.day==='sab');
+    const domMatches=MATCHES.filter(m=>m.day==='dom');
+    const matchTabsEl=document.getElementById('match-tabs');
+    const matchTabsRow=document.getElementById('match-tabs-row');
+    let matchHtml='';
+    sabMatches.forEach(m=>{
+      matchHtml+=`<div class="ptab" data-key="${m.key}" onclick="selectMatchTab('${m.key}',this)">vs ${m.rival}</div>`;
+    });
+    if(hasDom&&hasSab){
+      matchHtml+=`<div class="ptab" style="color:#ddd;cursor:default;background:transparent;border-color:transparent;padding:3px 2px">|</div>`;
+    }
+    domMatches.forEach(m=>{
+      matchHtml+=`<div class="ptab" data-key="${m.key}" onclick="selectMatchTab('${m.key}',this)">vs ${m.rival}</div>`;
+    });
+    matchTabsEl.innerHTML=matchHtml;
+    matchTabsRow.style.display='';
+  }
+}
+
 // ─── UI ────────────────────────────────────────────────────────────────────
 function setSortMode(m,el){
   sortMode=m;
@@ -789,12 +902,35 @@ function setDay(day,el){
   activeView=day;
   document.querySelectorAll('#day-tabs .ftab').forEach(b=>b.classList.remove('ap'));
   el.classList.add('ap');
+  document.querySelectorAll('#match-tabs .ptab[data-key]').forEach(b=>b.classList.remove('active'));
   updateHeader();
   render();
 }
-function selectMatch(key){
+function selectMatchTab(key,el){
   activeView=key;
   document.querySelectorAll('#day-tabs .ftab').forEach(b=>b.classList.remove('ap'));
+  document.querySelectorAll('#match-tabs .ptab[data-key]').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('fecha-opts').style.display='none';
+  updateHeader();
+  render();
+}
+function setDayActive(day){
+  document.querySelectorAll('#day-tabs .ftab[data-day]').forEach(b=>{
+    b.classList.toggle('ap',b.getAttribute('data-day')===day);
+  });
+  document.querySelectorAll('#match-tabs .ptab[data-key]').forEach(b=>b.classList.remove('active'));
+}
+function selectMatch(key){
+  activeView=key;
+  if(key==='total'||key==='sab'||key==='dom'){
+    setDayActive(key);
+  } else {
+    document.querySelectorAll('#day-tabs .ftab').forEach(b=>b.classList.remove('ap'));
+    document.querySelectorAll('#match-tabs .ptab[data-key]').forEach(b=>{
+      b.classList.toggle('active',b.getAttribute('data-key')===key);
+    });
+  }
   document.getElementById('fecha-opts').style.display='none';
   updateHeader();
   render();
@@ -841,7 +977,6 @@ function updateHeader(){
       document.getElementById('hdr-label').innerHTML=`<b class="${won?'win':'loss'}">${lbl}</b>`;
     }
   }
-  // Marcar activo en el dropdown
   document.querySelectorAll('#fecha-opts [data-key]').forEach(d=>{
     d.classList.toggle('active',d.getAttribute('data-key')===activeView);
   });
@@ -849,25 +984,19 @@ function updateHeader(){
 
 function buildDropdown(){
   const opts=document.getElementById('fecha-opts');
+  const sabMatches=MATCHES.filter(m=>m.day==='sab');
+  const domMatches=MATCHES.filter(m=>m.day==='dom');
   let html='';
   html+=`<div class="opts-sep">ACUMULADO</div>`;
-  html+=`<div data-key="total" onclick="selectMatch('total');setDayActive('total')">📊 Total acumulado</div>`;
-  const sabMatches=MATCHES.filter(m=>m.day==='sab');
-  if(sabMatches.length) html+=`<div data-key="sab" onclick="selectMatch('sab');setDayActive('sab')">🌅 Sábado (${sabMatches.length} partidos)</div>`;
-  const domMatches=MATCHES.filter(m=>m.day==='dom');
-  if(domMatches.length) html+=`<div data-key="dom" onclick="selectMatch('dom');setDayActive('dom')">☀️ Domingo (${domMatches.length} partidos)</div>`;
+  html+=`<div data-key="total" onclick="selectMatch('total')">📊 Total acumulado</div>`;
+  if(sabMatches.length) html+=`<div data-key="sab" onclick="selectMatch('sab')">🌅 Sábado (${sabMatches.length} partido${sabMatches.length!==1?'s':''})</div>`;
+  if(domMatches.length) html+=`<div data-key="dom" onclick="selectMatch('dom')">☀️ Domingo (${domMatches.length} partido${domMatches.length!==1?'s':''})</div>`;
   if(MATCHES.length) html+=`<div class="opts-sep">PARTIDOS</div>`;
   MATCHES.forEach(m=>{
     const dayLabel=m.day==='sab'?'SÁB':'DOM';
     html+=`<div data-key="${m.key}" onclick="selectMatch('${m.key}')">${dayLabel} · ${m.rival} &nbsp;<span style="color:#aaa;font-size:10px">${m.casiScore}–${m.rivalScore}</span></div>`;
   });
   opts.innerHTML=html;
-}
-function setDayActive(day){
-  document.querySelectorAll('#day-tabs .ftab').forEach((b,i)=>{
-    const days=['total','sab','dom'];
-    b.classList.toggle('ap',days[i]===day);
-  });
 }
 
 // ─── RENDER ────────────────────────────────────────────────────────────────
@@ -878,6 +1007,8 @@ function render(){
     return;
   }
   let h='';
+
+  // RESUMEN con toggle Equipo / Individual
   h+=`<div class="sec">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px">
       <span style="font-family:var(--fbc);font-size:11px;font-weight:700;color:#bbb;letter-spacing:1.8px;text-transform:uppercase">RESUMEN</span>
@@ -889,30 +1020,61 @@ function render(){
     </div>
     ${viewMode==='stats'?buildKPIs(data):''}
   </div>`;
+
   if(viewMode==='cards'){
     document.getElementById('mc').innerHTML=h+'<div id="cards-section">'+buildCards(data)+'</div>';
     attachDrag();
     return;
   }
+
+  // ERU semáforo
   const eruHtml=buildERU(data);
   if(eruHtml) h+=`<div class="sec"><div class="sec-ttl">🚦 ERU · SEMÁFORO</div>${eruHtml}</div>`;
+
+  // BLOQUE 1: TOP 3 VELOCIDAD MÁX
   h+=`<div class="sec"><div class="sec-ttl">🏃 VELOCIDAD MÁX · TOP 3</div><div class="podium">${velPodium(data)}</div></div>`;
+
+  // BLOQUE 2: MINUTOS JUGADOS
+  h+=`<div class="sec"><div class="sec-ttl">⏱ MINUTOS JUGADOS</div>${minChart(data)}</div>`;
+
+  // BLOQUE 3: MÉTRICAS CON TOGGLE
+
+  // Vel máx // Vel máx %
   h+=`<div class="sec"><div class="sec-ttl">🏃 VELOCIDAD MÁXIMA</div>${velChart(data)}</div>`;
-  h+=`<div class="sec"><div class="sec-ttl">📏 DISTANCIA + M/MIN</div>${svgBars({data:byGroup(data,'total_dist'),barKey:'total_dist',barLabel:'Distancia (m)',barColor:'team',dotsKey:'avg_mpm',dotsLabel:'m/min',dotsColor:'#444',dotsFormat:v=>f(v,1),fullN:data.length})}</div>`;
-  h+=`<div class="sec"><div class="sec-ttl">🔥 ALTA INTENSIDAD >18 km/h</div>${svgBars({data:byGroup(data,'ai18'),barKey:'ai18',barLabel:'>18 km/h (m)',barColor:'team',dotsKey:'ai_pct',dotsLabel:'AI %',dotsColor:'#C47000',dotsFormat:v=>Math.round(v)+'',fullN:data.length})}</div>`;
-  const spData=byGroup(data.filter(p=>p.dt25>0||p.sprint_count>0),'dt25');
-  if(spData.length) h+=`<div class="sec"><div class="sec-ttl">💨 SPRINT +25 km/h</div>${svgBars({data:spData,barKey:'dt25',barLabel:'>25 km/h (m)',barColor:'team',dotsKey:'sprint_count',dotsLabel:'Nº esfuerzos',dotsColor:'#C0392B',dotsFormat:v=>Math.round(v)+'',fullN:data.length})}</div>`;
+
+  // Distancia total // mts/min
+  h+=`<div class="sec"><div class="sec-ttl">📏 DISTANCIA</div>${distChart(data)}</div>`;
+
+  // HSR // HSR%
+  h+=`<div class="sec"><div class="sec-ttl">🔥 ALTA INTENSIDAD HSR</div>${hsrChart(data)}</div>`;
+
+  // Sprint distancia // cantidad sprints // +80% distancia
+  h+=`<div class="sec"><div class="sec-ttl">💨 SPRINT</div>${sprintChart(data)}</div>`;
+
+  // Acc y Dec banda 3 // banda 2.5
   h+=`<div class="sec"><div class="sec-ttl">⚡ ACELERACIONES / DESACELERACIONES</div>${accelChart(data)}</div>`;
+
+  // RHIE
   h+=`<div class="sec"><div class="sec-ttl">📊 RHIE</div>${rhieChart(data)}</div>`;
-  h+=`<div class="sec"><div class="sec-ttl">💥 CONTACTOS</div>${svgBars({data:byGroup(data,'contacts'),barKey:'contacts',barLabel:'Total contactos',barColor:'team',fullN:data.length})}</div>`;
+
+  // Contactos // contactos x min
+  h+=`<div class="sec"><div class="sec-ttl">💥 CONTACTOS</div>${contactChart(data)}</div>`;
+
+  // BiG
   h+=`<div class="sec"><div class="sec-ttl">🔁 VUELTA AL JUEGO (BiG)</div>${bigChart(data)}</div>`;
+
+  // Esfuerzos explosivos // por minuto
+  const hasEfExp=data.some(p=>p.ef_exp>0);
+  if(hasEfExp){
+    h+=`<div class="sec"><div class="sec-ttl">💫 ESFUERZOS EXPLOSIVOS</div>${efExpChart(data)}</div>`;
+  }
+
   document.getElementById('mc').innerHTML=h;
   attachDrag();
 }
 
 // ─── INICIALIZACIÓN ────────────────────────────────────────────────────────
 (async function(){
-  // Overlay de carga
   const overlay=document.createElement('div');
   overlay.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:12px';
   overlay.innerHTML='<div style="font-family:Barlow Condensed,sans-serif;font-size:15px;color:var(--cel);font-weight:700">Cargando datos Seven...</div><div style="width:36px;height:36px;border:3px solid var(--bord);border-top-color:var(--cel);border-radius:50%;animation:spin 0.8s linear infinite"></div>';
@@ -922,14 +1084,12 @@ function render(){
   document.head.appendChild(style);
 
   try{
-    // 1. Descubrir CSVs desde GitHub API
     const apiResp=await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${FOLDER}`);
     if(!apiResp.ok) throw new Error('No se pudo acceder a la carpeta seven-2026');
     const files=await apiResp.json();
     const csvFiles=files.filter(f=>f.name.toLowerCase().endsWith('.csv'));
     if(!csvFiles.length) throw new Error('No hay archivos CSV en seven-2026');
 
-    // 2. Parsear metadata y fetch todos los CSVs en paralelo
     const promises=csvFiles.map(async file=>{
       const meta=parseMatchKey(file.name);
       const rawUrl=`https://raw.githubusercontent.com/${OWNER}/${REPO}/main/${FOLDER}/${encodeURIComponent(file.name)}`;
@@ -952,16 +1112,15 @@ function render(){
 
     if(!MATCHES.length) throw new Error('No se pudieron cargar datos de los partidos');
 
-    // Ordenar: más reciente (dom) primero, luego sab, luego por nombre del rival
+    // Ordenar: sab antes que dom, luego por rival
     MATCHES.sort((a,b)=>{
-      if(a.day!==b.day) return a.day==='dom'?-1:1;
+      if(a.day!==b.day) return a.day==='sab'?-1:1;
       return a.rival.localeCompare(b.rival);
     });
 
-    // 3. Construir dropdown
     buildDropdown();
+    buildDayTabs();   // ← botonera condicional dinámica
 
-    // 4. Vista por defecto: TOTAL acumulado
     activeView='total';
     updateHeader();
 
