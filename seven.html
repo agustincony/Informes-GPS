@@ -173,14 +173,8 @@ const OWNER = 'agustincony';
 const REPO  = 'Informes-GPS';
 const FOLDER= 'seven-2026';
 const LOGO_URL = 'https://raw.githubusercontent.com/agustincony/Informes-GPS/main/LOGO%20CASI%20SIN%20FONDO.png';
-// Token de GitHub para evitar rate limit (60 req/h sin token → 5000 con token)
-// Generarlo en: https://github.com/settings/tokens → Fine-grained → solo "Contents: Read"
-const GH_TOKEN = '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'; // <-- reemplazar
-
 function ghHeaders(){
-  const h={'Accept':'application/vnd.github+json'};
-  if(GH_TOKEN&&GH_TOKEN!=='TU_TOKEN_AQUI') h['Authorization']=`Bearer ${GH_TOKEN}`;
-  return h;
+  return {'Accept':'application/vnd.github+json'};
 }
 
 // Mapeo de columnas CSV (índice 0-based, separador ;, Period==0 = totales)
@@ -1097,7 +1091,7 @@ function render(){
     const apiResp=await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${FOLDER}`,{headers:ghHeaders()});
     if(!apiResp.ok){
       const errJson=await apiResp.json().catch(()=>({}));
-      const msg=apiResp.status===403?'Rate limit de GitHub superado. Configurá un token en GH_TOKEN.':errJson.message||`Error ${apiResp.status}`;
+      const msg=apiResp.status===403?'Rate limit de GitHub (60 req/h). Esperá unos minutos e intentá de nuevo.':errJson.message||`Error ${apiResp.status}`;
       throw new Error(msg);
     }
     const files=await apiResp.json();
