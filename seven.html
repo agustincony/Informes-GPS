@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>CASI · Seven 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F7F7;--fg:#111;--cel:#1A7CC2;
+  --bg2:#fff;--bg3:#EFEFEF;--bg4:#E2E2E2;--bord:#DCDCDC;
+  --eru-v:#2E7D32;--eru-a:#E65100;--eru-r:#C62828;
+  --fbc:"Barlow Condensed",sans-serif;--fb:"Barlow",sans-serif;
+}
+body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;margin:0 auto;min-height:100vh}
+
+/* ── HEADER ── */
+.hdr{background:#fff;border-bottom:3px solid var(--cel);padding:9px 12px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:60;box-shadow:0 2px 6px rgba(0,0,0,.07)}
+.hdr img{height:38px;width:38px;object-fit:contain;flex-shrink:0}
+.hdr-info{flex:1;min-width:0}
+.hdr-info h1{font-family:var(--fbc);font-weight:900;font-size:18px;line-height:1.05;color:var(--fg);text-transform:uppercase}
+.hdr-info p{font-size:12px;color:var(--cel);font-family:var(--fbc);font-weight:700;letter-spacing:.6px;text-transform:uppercase}
+
+/* ── FILTERS ── */
+.flt{background:#fff;border-bottom:2px solid var(--bord);padding:6px 10px;display:flex;flex-direction:column;gap:5px;position:sticky;top:60px;z-index:59;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.flt-lbl{font-family:var(--fbc);font-size:9px;color:#aaa;font-weight:700;letter-spacing:.8px;margin-bottom:2px}
+.flt-row{display:flex;gap:4px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:1px}
+.flt-row::-webkit-scrollbar{display:none}
+.ftab{flex-shrink:0;padding:5px 10px;text-align:center;font-family:var(--fbc);font-weight:700;font-size:11px;cursor:pointer;border-radius:4px;color:#aaa;background:var(--bg3);border:1px solid var(--bord);transition:all .15s;-webkit-tap-highlight-color:transparent;user-select:none;white-space:nowrap}
+.ftab.active{color:#fff;background:var(--cel);border-color:var(--cel)}
+.ftab.sab-active{color:#fff;background:#7B4FC0;border-color:#7B4FC0}
+.ftab.dom-active{color:#fff;background:#C47000;border-color:#C47000}
+.ptab{flex-shrink:0;padding:4px 10px;text-align:center;font-family:var(--fbc);font-weight:700;font-size:11px;cursor:pointer;border-radius:4px;color:#aaa;background:var(--bg3);border:1px solid var(--bord);transition:all .15s;-webkit-tap-highlight-color:transparent;user-select:none}
+.ptab.active{color:var(--fg);background:var(--bg4);border-color:#999;font-weight:900}
+
+/* ── MATCH BANNER ── */
+.match-banner{background:#fff;border-bottom:1px solid var(--bord);padding:8px 12px;display:flex;align-items:center;justify-content:space-between}
+.mb-rival{font-family:var(--fbc);font-weight:900;font-size:16px;color:var(--fg)}
+.mb-score{font-family:var(--fbc);font-weight:700;font-size:14px;color:#555}
+.mb-day{font-family:var(--fbc);font-weight:700;font-size:10px;padding:3px 8px;border-radius:10px;text-transform:uppercase}
+.mb-day.sab{background:#7B4FC0;color:#fff}
+.mb-day.dom{background:#C47000;color:#fff}
+.mb-result{font-family:var(--fbc);font-weight:900;font-size:11px;padding:3px 8px;border-radius:10px}
+.mb-result.g{background:#2E7D32;color:#fff}
+.mb-result.p{background:#C62828;color:#fff}
+.mb-result.e{background:#F57C00;color:#fff}
+
+/* ── SECTION ── */
+.sec{padding:11px 10px 4px}
+.sec-ttl{font-family:var(--fbc);font-size:11px;font-weight:700;color:#bbb;letter-spacing:1.8px;text-transform:uppercase;margin-bottom:9px;display:flex;align-items:center;gap:7px}
+.sec-ttl::after{content:'';flex:1;height:1px;background:var(--bord)}
+.cso{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;cursor:grab}
+.cso:active{cursor:grabbing}
+.cso svg{display:block}
+
+/* ── ERU BADGE ── */
+.eru-badge{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;font-family:var(--fbc);font-weight:900;font-size:13px;color:#fff;flex-shrink:0}
+.eru-v{background:var(--eru-v)}
+.eru-a{background:var(--eru-a)}
+.eru-r{background:var(--eru-r)}
+
+/* ── PLAYER SUMMARY ROW ── */
+.player-tbl{width:100%;padding:0 10px;display:flex;flex-direction:column;gap:6px}
+.player-row{background:#fff;border:1px solid var(--bord);border-radius:7px;padding:8px 10px;display:flex;align-items:center;gap:8px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.pr-name{font-family:var(--fbc);font-weight:700;font-size:14px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr-stats{display:flex;gap:8px;flex-shrink:0}
+.pr-stat{text-align:center}
+.pr-stat-v{font-family:var(--fbc);font-weight:900;font-size:13px;line-height:1.1}
+.pr-stat-l{font-family:var(--fbc);font-weight:600;font-size:8px;color:#aaa;text-transform:uppercase}
+
+/* ── FOOTER ── */
+.footer{text-align:center;padding:16px 10px;font-family:var(--fbc);font-size:10px;color:#ccc;border-top:1px solid var(--bord);margin-top:8px}
+
+/* ── LOADING ── */
+#loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:14px;padding:20px;text-align:center}
+#loading-overlay .lo-txt{font-family:var(--fbc);font-size:15px;color:var(--cel);font-weight:700}
+#loading-overlay .lo-sub{font-family:var(--fbc);font-size:12px;color:#aaa}
+#loading-overlay .lo-spin{width:36px;height:36px;border:3px solid var(--bord);border-top-color:var(--cel);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── EMPTY ── */
+.empty{padding:40px 20px;text-align:center;font-family:var(--fbc);font-size:14px;color:#bbb}
+
+::-webkit-scrollbar{height:3px;width:3px}
+::-webkit-scrollbar-track{background:var(--bg3)}
+::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <img id="hdr-logo" src="https://raw.githubusercontent.com/agustincony/Informes-GPS/main/LOGO%20CASI%20SIN%20FONDO.png" alt="CASI">
+  <div class="hdr-info">
+    <h1>CASI · Seven 2026</h1>
+    <p>URBA SEVEN · CONTROL DE CARGA GPS</p>
+  </div>
+</div>
+
+<div class="flt">
+  <div>
+    <div class="flt-lbl">VISTA</div>
+    <div class="flt-row" id="view-tabs">
+      <div class="ftab active" data-view="total" onclick="setView('total',this)">TOTAL</div>
+      <div class="ftab" data-view="sab" onclick="setView('sab',this)" style="background:var(--bg3)">SAB</div>
+      <div class="ftab" data-view="dom" onclick="setView('dom',this)" style="background:var(--bg3)">DOM</div>
+    </div>
+  </div>
+  <div>
+    <div class="flt-lbl">PARTIDO</div>
+    <div class="flt-row" id="match-tabs"></div>
+  </div>
+  <div>
+    <div class="flt-lbl">ORDENAR</div>
+    <div class="flt-row" id="sort-tabs">
+      <div class="ptab active" data-sort="minutos" onclick="setSort('minutos',this)">Minutos</div>
+      <div class="ptab" data-sort="rendimiento" onclick="setSort('rendimiento',this)">Rendimiento</div>
+      <div class="ptab" data-sort="nombre" onclick="setSort('nombre',this)">Nombre</div>
+    </div>
+  </div>
+</div>
+
+<div id="banner"></div>
+<div id="mc"></div>
+<div class="footer">CASI · Seven 2026 · PF Agustín Cony</div>
+
+<div id="loading-overlay">
+  <div class="lo-txt">Cargando partidos…</div>
+  <div class="lo-spin"></div>
+  <div class="lo-sub">Descargando archivos desde GitHub</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════
+const OWNER = 'agustincony';
+const REPO  = 'Informes-GPS';
+const FOLDER= 'seven-2026';
+
+// ═══════════════════════════════════════════════════════
+// COLUMN INDICES (0-based, semicolon CSV)
+// ═══════════════════════════════════════════════════════
+const C = {
+  name:0, periodNum:2, mins:7,
+  distTotal:15, mtsMin:16,
+  hsr:17, hsrPct:19,
+  sprintDist:20, sprintN:21,
+  velMax:23, velMaxPct:24,
+  acc25:27, dec25:29,
+  rhie:33,
+  contactos:36, contactosMin:37,
+  big:38,
+  pl:42, plMin:43,
+  efExp:44, efExpMin:45,
+  distExp:50,
+  accB3:52, decB3:53,
+  pct80:79, pct90:81, pct95:83, pct100:85,
+};
+
+// ═══════════════════════════════════════════════════════
+// LIMITES INDIVIDUALES (desde LIMITES SEVEN 2026.csv)
+// Columnas: mtsMin · plMin · velMaxPct · sprintDist · decB3 · accB3 · hsr · hsrPct · distExp · sprintN
+// ═══════════════════════════════════════════════════════
+const LIMITS = {
+  'Juan Franco Akemeier': {mtsMin:123.45,plMin:12.82,velMaxPct:100,sprintDist:0,decB3:7,accB3:1,hsr:214.04,hsrPct:26.54,distExp:44.74,sprintN:3},
+  'Facundo Barone':       {mtsMin:108.33,plMin:11.82,velMaxPct:100,sprintDist:28.59,decB3:8,accB3:1.75,hsr:235.98,hsrPct:21.61,distExp:98.39,sprintN:3},
+  'Benjamin Belaga':      {mtsMin:100.46,plMin:10.90,velMaxPct:100,sprintDist:0,decB3:5,accB3:4,hsr:155.71,hsrPct:10.66,distExp:31.11,sprintN:2},
+  'Agustín Belleze':      {mtsMin:108.33,plMin:11.82,velMaxPct:100,sprintDist:28.59,decB3:8,accB3:1.75,hsr:235.98,hsrPct:21.61,distExp:98.39,sprintN:3},
+  'Nicanor Castillo':     {mtsMin:107.31,plMin:11.76,velMaxPct:100,sprintDist:19.06,decB3:7.67,accB3:2.83,hsr:264.75,hsrPct:20,distExp:77.58,sprintN:2.67},
+  'Ramón Castillo':       {mtsMin:108.07,plMin:11.71,velMaxPct:100,sprintDist:0,decB3:7.33,accB3:3,hsr:247.33,hsrPct:18.85,distExp:48.4,sprintN:2.5},
+  'Santiago David':       {mtsMin:108.33,plMin:11.82,velMaxPct:100,sprintDist:28.59,decB3:8,accB3:1.75,hsr:235.98,hsrPct:21.61,distExp:98.39,sprintN:3},
+  'Felipe Hileman':       {mtsMin:122.05,plMin:15.02,velMaxPct:100,sprintDist:0,decB3:10,accB3:2,hsr:357.73,hsrPct:23.19,distExp:75.33,sprintN:4},
+  'Alejo Lavayen':        {mtsMin:118.95,plMin:13.55,velMaxPct:100,sprintDist:38.53,decB3:7.5,accB3:2.75,hsr:253.06,hsrPct:22.26,distExp:100.73,sprintN:2.75},
+  'Francisco Lescano':    {mtsMin:128.02,plMin:14.72,velMaxPct:100,sprintDist:0,decB3:5,accB3:1,hsr:161.33,hsrPct:24.61,distExp:31.83,sprintN:2},
+  'Vicente Mammoliti':    {mtsMin:127.18,plMin:16.84,velMaxPct:100,sprintDist:39.78,decB3:10,accB3:4,hsr:347.47,hsrPct:25.70,distExp:71.09,sprintN:3},
+  'Tomas Phelan':         {mtsMin:106.45,plMin:12.15,velMaxPct:100,sprintDist:0,decB3:7,accB3:3,hsr:263.23,hsrPct:17.40,distExp:21.16,sprintN:2},
+  'Pedro Repetto':        {mtsMin:103.49,plMin:11.22,velMaxPct:100,sprintDist:0,decB3:3,accB3:1,hsr:82.98,hsrPct:8.70,distExp:16.06,sprintN:1},
+  'Eliseo Roger':         {mtsMin:128.23,plMin:15.09,velMaxPct:100,sprintDist:19.89,decB3:8,accB3:3.5,hsr:269,hsrPct:22.48,distExp:76,sprintN:2.5},
+  'Joaquin Sanchez':      {mtsMin:129.28,plMin:13.33,velMaxPct:100,sprintDist:0,decB3:6,accB3:3,hsr:190.52,hsrPct:19.26,distExp:80.92,sprintN:2},
+  'Ignacio Torrado':      {mtsMin:104.51,plMin:10.75,velMaxPct:100,sprintDist:0,decB3:6.5,accB3:1.5,hsr:203.78,hsrPct:15.17,distExp:43.39,sprintN:2.25},
+};
+
+// ═══════════════════════════════════════════════════════
+// ESTADO
+// ═══════════════════════════════════════════════════════
+let matches   = [];   // [{filename, day, rival, casiScore, rivalScore, players:[]}]
+let activeView= 'total';  // 'total' | 'sab' | 'dom' | match filename
+let sortMode  = 'minutos';
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+function n(v){ return isNaN(+v)||v===''||v===null?0:+String(v).replace(',','.'); }
+function f(v,d=1){ const x=+v; return isNaN(x)?'-':x.toFixed(d); }
+
+const DS = new Set(['Gomez Salaverri','Montes de Oca','Rocca Rivarola','Dominguez Perdigón',
+  'Rocca Sackmann','Torres Obeid','Saenz de Miera','Lopez Canale','de la Torre Aubone']);
+function fmtName(full){
+  if(!full) return '';
+  const p=full.trim().split(' ');
+  if(p.length<=1) return p[0]||'';
+  const l3=p.slice(-3).join(' '), l2=p.slice(-2).join(' ');
+  let ap, nom;
+  if(p.length>=4&&DS.has(l3)){ap=l3;nom=p.slice(0,-3).join(' ');}
+  else if(p.length>=3&&DS.has(l2)){ap=l2;nom=p.slice(0,-2).join(' ');}
+  else{ap=p[p.length-1];nom=p.slice(0,-1).join(' ');}
+  return ap+(nom?' '+nom[0]+'.':'');
+}
+
+// Convierte "Apellido, Nombre" a "Nombre Apellido" para lookup en LIMITS
+function limitKey(csvName){
+  const parts = csvName.split(',').map(s=>s.trim());
+  if(parts.length<2) return csvName;
+  return parts.slice(1).join(' ').trim()+' '+parts[0].trim();
+}
+function getLimits(playerName){
+  if(LIMITS[playerName]) return LIMITS[playerName];
+  // try variations (accent insensitive)
+  for(const k of Object.keys(LIMITS)){
+    if(k.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()===
+       playerName.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase()) return LIMITS[k];
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════
+// CSV PARSING
+// ═══════════════════════════════════════════════════════
+function parseCSV(text){
+  const lines = text.split(/\r?\n/).filter(l=>l.trim());
+  if(lines.length<2) return [];
+  const players=[];
+  for(let i=1;i<lines.length;i++){
+    const cols = lines[i].split(';');
+    if(cols.length<10) continue;
+    const periodNum = n(cols[C.periodNum]);
+    if(periodNum!==0) continue;  // solo totales del partido
+    const name = (cols[C.name]||'').trim();
+    if(!name) continue;
+    const mins = n(cols[C.mins]);
+    if(mins<=0) continue;
+    const sprint80 = n(cols[C.pct80])+n(cols[C.pct90])+n(cols[C.pct95])+n(cols[C.pct100]);
+    players.push({
+      name, mins,
+      distTotal: n(cols[C.distTotal]),
+      mtsMin:    n(cols[C.mtsMin]),
+      hsr:       n(cols[C.hsr]),
+      hsrPct:    n(cols[C.hsrPct]),
+      sprintDist:n(cols[C.sprintDist]),
+      sprintN:   n(cols[C.sprintN]),
+      velMax:    n(cols[C.velMax]),
+      velMaxPct: n(cols[C.velMaxPct]),
+      rhie:      n(cols[C.rhie]),
+      contactos: n(cols[C.contactos]),
+      contactosMin:n(cols[C.contactosMin]),
+      big:       n(cols[C.big]),
+      pl:        n(cols[C.pl]),
+      plMin:     n(cols[C.plMin]),
+      efExp:     n(cols[C.efExp]),
+      distExp:   n(cols[C.distExp]),
+      accB3:     n(cols[C.accB3]),
+      decB3:     n(cols[C.decB3]),
+      sprint80,
+    });
+  }
+  return players;
+}
+
+// ═══════════════════════════════════════════════════════
+// FILENAME PARSING: {sab|dom}-{Rival}-{CASI}-{Rival}.csv
+// ═══════════════════════════════════════════════════════
+function parseFilename(fn){
+  const base = fn.replace(/\.csv$/i,'');
+  const parts = base.split('-');
+  if(parts.length<4) return {day:'sab',rival:base,casiScore:null,rivalScore:null};
+  const day = parts[0].toLowerCase();
+  // Last two parts are scores, middle parts are rival name
+  const rivalScore = parts[parts.length-1];
+  const casiScore  = parts[parts.length-2];
+  const rival = parts.slice(1, parts.length-2).join(' ');
+  return {day, rival, casiScore:+casiScore, rivalScore:+rivalScore};
+}
+
+// ═══════════════════════════════════════════════════════
+// ERU CÁLCULO (normalización min-max dentro del grupo)
+// PL(42):20% · distExp(50):30% · RHIE(33):25% · BiG(38):10%inv · Contactos(36):15%
+// ═══════════════════════════════════════════════════════
+function calcERU(players){
+  if(!players||!players.length) return players;
+  const fields = [
+    {key:'pl',     w:0.20, inv:false},
+    {key:'distExp',w:0.30, inv:false},
+    {key:'rhie',   w:0.25, inv:false},
+    {key:'big',    w:0.10, inv:true },
+    {key:'contactos',w:0.15,inv:false},
+  ];
+  const minmax = {};
+  fields.forEach(({key})=>{
+    const vals = players.map(p=>p[key]).filter(v=>v>0);
+    minmax[key]={min:vals.length?Math.min(...vals):0, max:vals.length?Math.max(...vals):0};
+  });
+  return players.map(p=>{
+    let eru=0;
+    fields.forEach(({key,w,inv})=>{
+      const {min,max}=minmax[key];
+      let norm = max>min ? (p[key]-min)/(max-min) : (p[key]>0?1:0);
+      if(inv) norm = 1-norm;
+      eru += w*norm;
+    });
+    return {...p, eru: Math.round(eru*100)};
+  });
+}
+
+function eruClass(e){ return e>=60?'eru-v':e>=30?'eru-a':'eru-r'; }
+
+// ═══════════════════════════════════════════════════════
+// ACUMULACIÓN (SAB / DOM / TOTAL)
+// ═══════════════════════════════════════════════════════
+function accumulate(matchList){
+  const byName={};
+  matchList.forEach(m=>{
+    m.players.forEach(p=>{
+      if(!byName[p.name]) byName[p.name]={
+        name:p.name, mins:0, distTotal:0, hsr:0, sprintDist:0, sprintN:0,
+        rhie:0, contactos:0, pl:0, distExp:0, sprint80:0,
+        accB3:0, decB3:0, efExp:0,
+        velMax:0, velMaxPct:0,
+        bigSum:0, bigCnt:0,
+      };
+      const a=byName[p.name];
+      a.mins+=p.mins; a.distTotal+=p.distTotal; a.hsr+=p.hsr;
+      a.sprintDist+=p.sprintDist; a.sprintN+=p.sprintN;
+      a.rhie+=p.rhie; a.contactos+=p.contactos;
+      a.pl+=p.pl; a.distExp+=p.distExp; a.sprint80+=p.sprint80;
+      a.accB3+=p.accB3; a.decB3+=p.decB3; a.efExp+=p.efExp;
+      a.velMax=Math.max(a.velMax,p.velMax);
+      a.velMaxPct=Math.max(a.velMaxPct,p.velMaxPct);
+      if(p.big>0){a.bigSum+=p.big; a.bigCnt++;}
+    });
+  });
+  return Object.values(byName).map(a=>({
+    ...a,
+    mtsMin:    a.mins>0 ? a.distTotal/a.mins     : 0,
+    plMin:     a.mins>0 ? a.pl/a.mins            : 0,
+    hsrPct:    a.distTotal>0 ? a.hsr/a.distTotal*100 : 0,
+    contactosMin: a.mins>0 ? a.contactos/a.mins  : 0,
+    big:       a.bigCnt>0 ? a.bigSum/a.bigCnt    : 0,
+  }));
+}
+
+// ═══════════════════════════════════════════════════════
+// SORT
+// ═══════════════════════════════════════════════════════
+function sortPlayers(players, metric){
+  const copy=[...players];
+  if(sortMode==='nombre') copy.sort((a,b)=>a.name.localeCompare(b.name,'es'));
+  else if(sortMode==='minutos') copy.sort((a,b)=>b.mins-a.mins);
+  else if(sortMode==='rendimiento') copy.sort((a,b)=>(b[metric]||0)-(a[metric]||0));
+  return copy;
+}
+
+// ═══════════════════════════════════════════════════════
+// SVG BAR CHART
+// ═══════════════════════════════════════════════════════
+function svgBars(players, metricKey, decDigits, barColor, limitMetric){
+  const BAR_W=38, GAP=8, CHART_H=130, NAME_H=42, TOP_PAD=22;
+  const totalH=TOP_PAD+CHART_H+NAME_H;
+  const sorted=sortPlayers(players, metricKey);
+  const vals=sorted.map(p=>+(p[metricKey]||0));
+  const maxV=Math.max(...vals,0.001);
+  const totalW=sorted.length*(BAR_W+GAP)+GAP;
+
+  let s=`<svg width="${totalW}" height="${totalH}" xmlns="http://www.w3.org/2000/svg">`;
+  s+=`<rect width="${totalW}" height="${totalH}" fill="#FFFFFF" rx="4"/>`;
+
+  sorted.forEach((p,i)=>{
+    const x=GAP+i*(BAR_W+GAP);
+    const v=+(p[metricKey]||0);
+    const bh=maxV>0?(v/maxV)*CHART_H:0;
+    const by=TOP_PAD+CHART_H-bh;
+
+    // bar
+    s+=`<rect x="${x}" y="${by.toFixed(1)}" width="${BAR_W}" height="${bh.toFixed(1)}" fill="${barColor}" rx="2"/>`;
+
+    // value label
+    const lbl=v>0?v.toFixed(decDigits):'-';
+    const ly=by>TOP_PAD+10?by-4:by+13;
+    s+=`<text x="${x+BAR_W/2}" y="${ly.toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="10" font-weight="700" fill="${by<TOP_PAD+14?'#fff':'#111'}">${lbl}</text>`;
+
+    // limit line
+    if(limitMetric){
+      const lims=getLimits(p.name);
+      if(lims&&lims[limitMetric]!=null&&lims[limitMetric]>0){
+        const limV=lims[limitMetric];
+        const limY=TOP_PAD+CHART_H-(limV/maxV)*CHART_H;
+        if(limY>=TOP_PAD&&limY<=TOP_PAD+CHART_H){
+          s+=`<line x1="${x-1}" y1="${limY.toFixed(1)}" x2="${x+BAR_W+1}" y2="${limY.toFixed(1)}" stroke="#E53935" stroke-width="1.5" stroke-dasharray="3,2"/>`;
+        }
+      }
+    }
+
+    // name label (rotated)
+    const nm=fmtName(p.name);
+    const ny=TOP_PAD+CHART_H+6;
+    s+=`<text transform="rotate(-55,${x+BAR_W/2},${ny})" x="${x+BAR_W/2}" y="${ny}" text-anchor="end" font-family="Barlow Condensed" font-size="9" font-weight="600" fill="#888">${nm}</text>`;
+  });
+
+  s+=`</svg>`;
+  return s;
+}
+
+// ERU color bars
+function svgERUbars(players){
+  const BAR_W=38, GAP=8, CHART_H=130, NAME_H=42, TOP_PAD=22;
+  const totalH=TOP_PAD+CHART_H+NAME_H;
+  const sorted=[...players].sort((a,b)=>(b.eru||0)-(a.eru||0));
+  const maxV=100;
+  const totalW=sorted.length*(BAR_W+GAP)+GAP;
+
+  let s=`<svg width="${totalW}" height="${totalH}" xmlns="http://www.w3.org/2000/svg">`;
+  s+=`<rect width="${totalW}" height="${totalH}" fill="#FFFFFF" rx="4"/>`;
+
+  sorted.forEach((p,i)=>{
+    const x=GAP+i*(BAR_W+GAP);
+    const v=p.eru||0;
+    const bh=(v/maxV)*CHART_H;
+    const by=TOP_PAD+CHART_H-bh;
+    const col=v>=60?'#2E7D32':v>=30?'#E65100':'#C62828';
+
+    s+=`<rect x="${x}" y="${by.toFixed(1)}" width="${BAR_W}" height="${bh.toFixed(1)}" fill="${col}" rx="2"/>`;
+    s+=`<text x="${x+BAR_W/2}" y="${(by-4).toFixed(1)}" text-anchor="middle" font-family="Barlow Condensed" font-size="10" font-weight="700" fill="#111">${v}</text>`;
+
+    const nm=fmtName(p.name);
+    const ny=TOP_PAD+CHART_H+6;
+    s+=`<text transform="rotate(-55,${x+BAR_W/2},${ny})" x="${x+BAR_W/2}" y="${ny}" text-anchor="end" font-family="Barlow Condensed" font-size="9" font-weight="600" fill="#888">${nm}</text>`;
+  });
+
+  s+=`</svg>`;
+  return s;
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════
+const METRICS = [
+  {label:'ERU · ÍNDICE DE RENDIMIENTO', key:'eru',       dec:0, color:'#1A7CC2', limit:null,         special:'eru'},
+  {label:'MINUTOS',                      key:'mins',      dec:0, color:'#1A7CC2', limit:null},
+  {label:'DISTANCIA TOTAL (m)',          key:'distTotal', dec:0, color:'#1A7CC2', limit:null},
+  {label:'DIST./MIN (m/min)',            key:'mtsMin',    dec:1, color:'#1A7CC2', limit:'mtsMin'},
+  {label:'PLAYER LOAD (UA)',             key:'pl',        dec:0, color:'#1A7CC2', limit:null},
+  {label:'PL/MIN (UA/min)',              key:'plMin',     dec:2, color:'#1A7CC2', limit:'plMin'},
+  {label:'DISTANCIA EXPLOSIVA (m)',      key:'distExp',   dec:0, color:'#7B4FC0', limit:'distExp'},
+  {label:'RHIE (#)',                     key:'rhie',      dec:0, color:'#C47000', limit:null},
+  {label:'BiG (s) — menor es mejor',    key:'big',       dec:1, color:'#C47000', limit:null},
+  {label:'CONTACTOS (#)',                key:'contactos', dec:0, color:'#C47000', limit:null},
+  {label:'HSR - ALTA VELOC. (m)',        key:'hsr',       dec:0, color:'#2E7D32', limit:'hsr'},
+  {label:'SPRINT DIST. (m)',             key:'sprintDist',dec:0, color:'#2E7D32', limit:'sprintDist'},
+  {label:'SPRINT +80% (#)',              key:'sprint80',  dec:0, color:'#2E7D32', limit:null},
+  {label:'VELOC. MÁX. (km/h)',           key:'velMax',    dec:1, color:'#1A7CC2', limit:null},
+  {label:'VELOC. MÁX. (%)',             key:'velMaxPct', dec:0, color:'#1A7CC2', limit:'velMaxPct'},
+  {label:'ACELERACIONES B3 (#)',         key:'accB3',     dec:0, color:'#555',    limit:'accB3'},
+  {label:'DESACELERACIONES B3 (#)',      key:'decB3',     dec:0, color:'#555',    limit:'decB3'},
+];
+
+function renderMetricSection(players){
+  if(!players||!players.length) return '<div class="empty">Sin datos para esta selección</div>';
+  let html='';
+  METRICS.forEach(m=>{
+    html+=`<div class="sec"><div class="sec-ttl">${m.label}</div>`;
+    html+=`<div class="cso">`;
+    if(m.special==='eru'){
+      html+=svgERUbars(players);
+    } else {
+      html+=svgBars(players, m.key, m.dec, m.color, m.limit);
+    }
+    html+=`</div></div>`;
+  });
+  return html;
+}
+
+function getCurrentPlayers(){
+  if(activeView==='total')      return calcERU(accumulate(matches));
+  if(activeView==='sab')        return calcERU(accumulate(matches.filter(m=>m.day==='sab')));
+  if(activeView==='dom')        return calcERU(accumulate(matches.filter(m=>m.day==='dom')));
+  // specific match
+  const m=matches.find(m=>m.filename===activeView);
+  return m ? calcERU(m.players) : [];
+}
+
+function renderBanner(){
+  const el=document.getElementById('banner');
+  if(activeView==='total'){
+    el.innerHTML=`<div class="match-banner"><span class="mb-rival">Acumulado TOTAL</span><span class="mb-score">${matches.length} partidos</span></div>`;
+    return;
+  }
+  if(activeView==='sab'){
+    const n=matches.filter(m=>m.day==='sab').length;
+    el.innerHTML=`<div class="match-banner"><span class="mb-rival">Acumulado SÁBADOS</span><span class="mb-score">${n} partidos</span><span class="mb-day sab">SAB</span></div>`;
+    return;
+  }
+  if(activeView==='dom'){
+    const n=matches.filter(m=>m.day==='dom').length;
+    el.innerHTML=`<div class="match-banner"><span class="mb-rival">Acumulado DOMINGOS</span><span class="mb-score">${n} partidos</span><span class="mb-day dom">DOM</span></div>`;
+    return;
+  }
+  const m=matches.find(m=>m.filename===activeView);
+  if(!m){el.innerHTML='';return;}
+  const won = m.casiScore!=null && m.rivalScore!=null ? (m.casiScore>m.rivalScore?'g':m.casiScore<m.rivalScore?'p':'e') : null;
+  const resLabel = won==='g'?'GANÓ':won==='p'?'PERDIÓ':won==='e'?'EMPATE':'';
+  el.innerHTML=`<div class="match-banner">
+    <span class="mb-rival">vs ${m.rival}</span>
+    ${m.casiScore!=null?`<span class="mb-score">CASI ${m.casiScore} – ${m.rivalScore}</span>`:''}
+    ${won?`<span class="mb-result ${won}">${resLabel}</span>`:''}
+    <span class="mb-day ${m.day}">${m.day.toUpperCase()}</span>
+  </div>`;
+}
+
+function render(){
+  renderBanner();
+  const players=getCurrentPlayers();
+  document.getElementById('mc').innerHTML=renderMetricSection(players);
+}
+
+// ═══════════════════════════════════════════════════════
+// MATCH TABS
+// ═══════════════════════════════════════════════════════
+function buildMatchTabs(){
+  const container=document.getElementById('match-tabs');
+  if(!matches.length){container.innerHTML='<span style="font-family:var(--fbc);font-size:11px;color:#ccc">Sin archivos aún</span>';return;}
+  container.innerHTML=matches.map(m=>{
+    const lbl=`vs ${m.rival} <span style="font-size:9px;opacity:.7">${m.day.toUpperCase()}</span>`;
+    return `<div class="ftab" data-fn="${m.filename}" onclick="setMatchView('${m.filename}',this)">${lbl}</div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// VIEW / SORT ACTIONS
+// ═══════════════════════════════════════════════════════
+function clearViewTabs(){
+  document.querySelectorAll('#view-tabs .ftab').forEach(t=>t.classList.remove('active','sab-active','dom-active'));
+  document.querySelectorAll('#match-tabs .ftab').forEach(t=>t.classList.remove('active'));
+}
+function setView(v,el){
+  activeView=v;
+  clearViewTabs();
+  if(v==='sab') el.classList.add('sab-active');
+  else if(v==='dom') el.classList.add('dom-active');
+  else el.classList.add('active');
+  render();
+}
+function setMatchView(fn,el){
+  activeView=fn;
+  clearViewTabs();
+  el.classList.add('active');
+  render();
+}
+function setSort(s,el){
+  sortMode=s;
+  document.querySelectorAll('#sort-tabs .ptab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+// ═══════════════════════════════════════════════════════
+// GITHUB API + CSV FETCH
+// ═══════════════════════════════════════════════════════
+async function loadData(){
+  const lo=document.getElementById('loading-overlay');
+  const loTxt=lo.querySelector('.lo-txt');
+  const loSub=lo.querySelector('.lo-sub');
+
+  try {
+    loTxt.textContent='Buscando archivos…';
+    const apiURL=`https://api.github.com/repos/${OWNER}/${REPO}/contents/${FOLDER}`;
+    const res=await fetch(apiURL);
+    if(!res.ok) throw new Error(`GitHub API: ${res.status}`);
+    const files=await res.json();
+    const csvFiles=files.filter(f=>f.name.toLowerCase().endsWith('.csv'));
+
+    if(!csvFiles.length){
+      loTxt.textContent='Sin archivos CSV en la carpeta seven-2026';
+      loSub.textContent='Verificá que los archivos estén subidos al repo';
+      return;
+    }
+
+    loTxt.textContent=`Cargando ${csvFiles.length} partido${csvFiles.length>1?'s':''}…`;
+
+    // Fetch all CSVs in parallel
+    const fetched=await Promise.all(csvFiles.map(async f=>{
+      const r=await fetch(f.download_url);
+      const text=await r.text();
+      const parsed=parseFilename(f.name);
+      const players=parseCSV(text);
+      return {...parsed, filename:f.name, players};
+    }));
+
+    // Sort: sab first within day groups, then by filename alphabetically
+    fetched.sort((a,b)=>{
+      if(a.day!==b.day) return a.day==='sab'?-1:1;
+      return a.filename.localeCompare(b.filename);
+    });
+
+    matches=fetched;
+    buildMatchTabs();
+    render();
+    lo.style.display='none';
+
+  } catch(err){
+    loTxt.textContent='Error al cargar datos';
+    loSub.textContent=err.message;
+    console.error(err);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+loadData();
+</script>
+</body>
+</html>
