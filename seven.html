@@ -173,6 +173,15 @@ const OWNER = 'agustincony';
 const REPO  = 'Informes-GPS';
 const FOLDER= 'seven-2026';
 const LOGO_URL = 'https://raw.githubusercontent.com/agustincony/Informes-GPS/main/LOGO%20CASI%20SIN%20FONDO.png';
+// Token de GitHub para evitar rate limit (60 req/h sin token → 5000 con token)
+// Generarlo en: https://github.com/settings/tokens → Fine-grained → solo "Contents: Read"
+const GH_TOKEN = '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'; // <-- reemplazar
+
+function ghHeaders(){
+  const h={'Accept':'application/vnd.github+json'};
+  if(GH_TOKEN&&GH_TOKEN!=='TU_TOKEN_AQUI') h['Authorization']=`Bearer ${GH_TOKEN}`;
+  return h;
+}
 
 // Mapeo de columnas CSV (índice 0-based, separador ;, Period==0 = totales)
 const C = {
@@ -861,10 +870,11 @@ function selectFutPlayer(name){
 function buildDayTabs(){
   const hasSab=MATCHES.some(m=>m.day==='sab');
   const hasDom=MATCHES.some(m=>m.day==='dom');
+  const hasBothDays=hasSab&&hasDom;
   const dayTabsEl=document.getElementById('day-tabs');
   let dayHtml=`<div class="ftab ap" data-day="total" onclick="setDay('total',this)">TOT</div>`;
-  if(hasSab) dayHtml+=`<div class="ftab" data-day="sab" onclick="setDay('sab',this)">SÁB</div>`;
-  if(hasDom) dayHtml+=`<div class="ftab" data-day="dom" onclick="setDay('dom',this)">DOM</div>`;
+  if(hasBothDays) dayHtml+=`<div class="ftab" data-day="sab" onclick="setDay('sab',this)">SÁB</div>`;
+  if(hasBothDays) dayHtml+=`<div class="ftab" data-day="dom" onclick="setDay('dom',this)">DOM</div>`;
   dayTabsEl.innerHTML=dayHtml;
 
   if(MATCHES.length>0){
@@ -1084,8 +1094,12 @@ function render(){
   document.head.appendChild(style);
 
   try{
-    const apiResp=await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${FOLDER}`);
-    if(!apiResp.ok) throw new Error('No se pudo acceder a la carpeta seven-2026');
+    const apiResp=await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${FOLDER}`,{headers:ghHeaders()});
+    if(!apiResp.ok){
+      const errJson=await apiResp.json().catch(()=>({}));
+      const msg=apiResp.status===403?'Rate limit de GitHub superado. Configurá un token en GH_TOKEN.':errJson.message||`Error ${apiResp.status}`;
+      throw new Error(msg);
+    }
     const files=await apiResp.json();
     const csvFiles=files.filter(f=>f.name.toLowerCase().endsWith('.csv'));
     if(!csvFiles.length) throw new Error('No hay archivos CSV en seven-2026');
