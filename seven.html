@@ -419,31 +419,48 @@ const TRIES_DATA = [
 
 function buildTriesMedallero(){
   if(!TRIES_DATA.length) return '';
+  // agrupar por cantidad de tries para detectar empates
+  const maxTries=TRIES_DATA[0].tries;
+  // separar podio (top 3 tries distintas) vs resto
+  const triesValues=[...new Set(TRIES_DATA.map(p=>p.tries))].slice(0,3);
+  const podioPlayers=TRIES_DATA.filter(p=>triesValues.includes(p.tries));
+  const restPlayers=TRIES_DATA.filter(p=>!triesValues.includes(p.tries));
+
+  // asignar medalla según posición en ranking de tries únicos
+  const medalMap={};
+  const clsMap={};
   const medals=['🥇','🥈','🥉'];
   const cls=['gold','silver','bronze'];
-  // top 3 → podio
-  const top3=TRIES_DATA.slice(0,3);
-  const rest=TRIES_DATA.slice(3);
-  let h='<div class="podium">';
-  top3.forEach((p,i)=>{
-    const pct=Math.round((p.tries/top3[0].tries)*100);
-    h+=`<div class="pod ${cls[i]}">
-      <div class="pod-medal">${medals[i]}</div>
-      <div class="pod-info"><div class="pod-name">${p.name}</div><div class="pod-sub">tries</div></div>
-      <div class="pod-nums"><div class="pod-vel">${p.tries}</div></div>
-      <div class="pod-bar"><div class="pod-fill" style="width:${pct}%"></div></div>
+  triesValues.forEach((v,i)=>{ medalMap[v]=medals[i]; clsMap[v]=cls[i]; });
+
+  // fila horizontal de podio
+  let h=`<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px">`;
+  podioPlayers.forEach(p=>{
+    const medal=medalMap[p.tries];
+    const c=clsMap[p.tries];
+    h+=`<div class="pod ${c}" style="flex:1;min-width:0;flex-direction:column;align-items:center;text-align:center;padding:8px 6px;gap:3px">
+      <div style="font-size:22px">${medal}</div>
+      <div class="pod-name" style="font-size:12px;white-space:normal;line-height:1.2">${p.name}</div>
+      <div class="pod-vel" style="font-size:24px">${p.tries}</div>
+      <div class="pod-bar" style="width:100%"><div class="pod-fill" style="width:${Math.round((p.tries/maxTries)*100)}%"></div></div>
     </div>`;
   });
-  h+='</div>';
-  if(rest.length){
-    h+='<div class="sc-grid" style="margin-top:7px">';
-    rest.forEach(p=>{
-      h+=`<div class="sc-cell">
-        <div class="kpi-lbl">${p.name.split(',')[0]}</div>
-        <div class="kpi-v">${p.tries}<span class="kpi-u"> T</span></div>
+  h+=`</div>`;
+
+  // grilla resto: nombre en negrita más grande + número
+  if(restPlayers.length){
+    h+=`<div style="margin-top:9px;display:grid;grid-template-columns:repeat(4,1fr);gap:7px 6px">`;
+    restPlayers.forEach(p=>{
+      // aclarar R o N para los Castillo
+      let display=p.name.split(',')[0];
+      if(p.name==='Castillo, Nicanor') display='Castillo N.';
+      if(p.name==='Castillo, Ramón')   display='Castillo R.';
+      h+=`<div class="sc-cell" style="display:flex;flex-direction:column;align-items:center;gap:2px">
+        <div style="font-family:var(--fbc);font-weight:700;font-size:12px;text-align:center;line-height:1.2;color:var(--fg)">${display}</div>
+        <div style="font-family:var(--fbc);font-size:20px;font-weight:900;line-height:1;color:var(--fg)">${p.tries}</div>
       </div>`;
     });
-    h+='</div>';
+    h+=`</div>`;
   }
   return h;
 }
