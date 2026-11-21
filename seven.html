@@ -404,60 +404,72 @@ function getDataset(){
 }
 
 // ─── MEDALLERO DE TRIES ─────────────────────────────────────────────────────────
-const TRIES_DATA = [
-  {name:'Castillo, Nicanor', tries:3},
-  {name:'Roger, Eliseo',     tries:3},
-  {name:'Belleze, Agustín',  tries:2},
-  {name:'Lavayen, Alejo',    tries:2},
-  {name:'Barone, Facundo',   tries:1},
-  {name:'Belaga, Benjamin',  tries:1},
-  {name:'Castillo, Ramón',   tries:1},
-  {name:'David, Santiago',   tries:1},
-  {name:'Phelan, Tomas',     tries:1},
-  {name:'Repetto, Pedro',    tries:1},
-];
+// tries por partido: key del CSV → { apellido: cantidad }
+const TRIES_BY_MATCH = {
+  'sab-Ciudad-53-0': {
+    'Belaga':   1,
+    'Belleze':  2,
+    'Castillo N.': 3,
+    'Castillo R.': 1,
+    'Roger':    2,
+  },
+  'sab-Tigre-45-0': {
+    'Barone':   1,
+    'David':    1,
+    'Lavayen':  2,
+    'Phelan':   1,
+    'Repetto':  1,
+    'Roger':    1,
+  },
+};
+
+function getTriesForView(view){
+  // acumulado total
+  if(view==='total'||view==='sab'||view==='dom'){
+    const acc={};
+    Object.values(TRIES_BY_MATCH).forEach(match=>{
+      Object.entries(match).forEach(([name,t])=>{ acc[name]=(acc[name]||0)+t; });
+    });
+    return acc;
+  }
+  // partido específico
+  return TRIES_BY_MATCH[view]||{};
+}
 
 function buildTriesMedallero(){
-  if(!TRIES_DATA.length) return '';
-  // agrupar por cantidad de tries para detectar empates
-  const maxTries=TRIES_DATA[0].tries;
-  // separar podio (top 3 tries distintas) vs resto
-  const triesValues=[...new Set(TRIES_DATA.map(p=>p.tries))].slice(0,3);
-  const podioPlayers=TRIES_DATA.filter(p=>triesValues.includes(p.tries));
-  const restPlayers=TRIES_DATA.filter(p=>!triesValues.includes(p.tries));
+  const raw=getTriesForView(activeView);
+  const sorted=Object.entries(raw)
+    .filter(([,t])=>t>0)
+    .sort((a,b)=>b[1]-a[1]);
+  if(!sorted.length) return '<div style="color:#aaa;font-size:12px;text-align:center;padding:8px">Sin datos</div>';
 
-  // asignar medalla según posición en ranking de tries únicos
-  const medalMap={};
-  const clsMap={};
+  const maxTries=sorted[0][1];
   const medals=['🥇','🥈','🥉'];
   const cls=['gold','silver','bronze'];
-  triesValues.forEach((v,i)=>{ medalMap[v]=medals[i]; clsMap[v]=cls[i]; });
 
-  // fila horizontal de podio
-  let h=`<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px">`;
-  podioPlayers.forEach(p=>{
-    const medal=medalMap[p.tries];
-    const c=clsMap[p.tries];
-    h+=`<div class="pod ${c}" style="flex:1;min-width:0;flex-direction:column;align-items:center;text-align:center;padding:8px 6px;gap:3px">
-      <div style="font-size:22px">${medal}</div>
-      <div class="pod-name" style="font-size:12px;white-space:normal;line-height:1.2">${p.name}</div>
-      <div class="pod-vel" style="font-size:24px">${p.tries}</div>
-      <div class="pod-bar" style="width:100%"><div class="pod-fill" style="width:${Math.round((p.tries/maxTries)*100)}%"></div></div>
+  // top 3 jugadores (no valores únicos — exactamente los primeros 3)
+  const top3=sorted.slice(0,3);
+  const rest=sorted.slice(3);
+
+  // fila horizontal podio
+  let h=`<div style="display:flex;gap:6px">`;
+  top3.forEach(([name,tries],i)=>{
+    h+=`<div class="pod ${cls[i]}" style="flex:1;min-width:0;flex-direction:column;align-items:center;text-align:center;padding:8px 4px;gap:2px">
+      <div style="font-size:20px">${medals[i]}</div>
+      <div style="font-family:var(--fbc);font-weight:700;font-size:12px;line-height:1.2;color:var(--fg)">${name}</div>
+      <div style="font-family:var(--fbc);font-size:22px;font-weight:900;line-height:1;color:var(--fg)">${tries}</div>
+      <div class="pod-bar" style="width:100%"><div class="pod-fill" style="width:${Math.round((tries/maxTries)*100)}%"></div></div>
     </div>`;
   });
   h+=`</div>`;
 
-  // grilla resto: nombre en negrita más grande + número
-  if(restPlayers.length){
-    h+=`<div style="margin-top:9px;display:grid;grid-template-columns:repeat(4,1fr);gap:7px 6px">`;
-    restPlayers.forEach(p=>{
-      // aclarar R o N para los Castillo
-      let display=p.name.split(',')[0];
-      if(p.name==='Castillo, Nicanor') display='Castillo N.';
-      if(p.name==='Castillo, Ramón')   display='Castillo R.';
-      h+=`<div class="sc-cell" style="display:flex;flex-direction:column;align-items:center;gap:2px">
-        <div style="font-family:var(--fbc);font-weight:700;font-size:12px;text-align:center;line-height:1.2;color:var(--fg)">${display}</div>
-        <div style="font-family:var(--fbc);font-size:20px;font-weight:900;line-height:1;color:var(--fg)">${p.tries}</div>
+  // grilla resto 4 por fila: apellido + cantidad
+  if(rest.length){
+    h+=`<div style="margin-top:8px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px">`;
+    rest.forEach(([name,tries])=>{
+      h+=`<div style="display:flex;flex-direction:column;align-items:center;gap:1px;background:var(--bg3);border:1px solid var(--bord);border-radius:7px;padding:6px 4px">
+        <div style="font-family:var(--fbc);font-weight:700;font-size:11px;text-align:center;line-height:1.2;color:var(--fg)">${name}</div>
+        <div style="font-family:var(--fbc);font-size:19px;font-weight:900;line-height:1;color:var(--fg)">${tries}</div>
       </div>`;
     });
     h+=`</div>`;
