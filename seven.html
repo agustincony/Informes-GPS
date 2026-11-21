@@ -173,9 +173,6 @@ const OWNER = 'agustincony';
 const REPO  = 'Informes-GPS';
 const FOLDER= 'seven-2026';
 const LOGO_URL = 'https://raw.githubusercontent.com/agustincony/Informes-GPS/main/LOGO%20CASI%20SIN%20FONDO.png';
-function ghHeaders(){
-  return {'Accept':'application/vnd.github+json'};
-}
 
 // Mapeo de columnas CSV (índice 0-based, separador ;, Period==0 = totales)
 const C = {
@@ -1088,26 +1085,29 @@ function render(){
   document.head.appendChild(style);
 
   try{
-    const apiResp=await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${FOLDER}`,{headers:ghHeaders()});
-    if(!apiResp.ok){
-      const errJson=await apiResp.json().catch(()=>({}));
-      const msg=apiResp.status===403?'Rate limit de GitHub (60 req/h). Esperá unos minutos e intentá de nuevo.':errJson.message||`Error ${apiResp.status}`;
-      throw new Error(msg);
-    }
-    const files=await apiResp.json();
-    const csvFiles=files.filter(f=>f.name.toLowerCase().endsWith('.csv'));
-    if(!csvFiles.length) throw new Error('No hay archivos CSV en seven-2026');
+    // ─── LISTA DE PARTIDOS ──────────────────────────────────────────────────
+    // Cuando subás un CSV nuevo a la carpeta seven-2026 del repo,
+    // agregá su nombre acá. Formato: 'dia-Rival-scoreCASI-scoreRival.csv'
+    // Ejemplos:
+    //   'sab-Newman-28-14.csv'
+    //   'dom-Alumni-7-21.csv'
+    const CSV_FILES = [
+      'sab-Belgrano-14-10.csv',
+    ];
+    // ───────────────────────────────────────────────────────────────────────
 
-    const promises=csvFiles.map(async file=>{
-      const meta=parseMatchKey(file.name);
-      const rawUrl=`https://raw.githubusercontent.com/${OWNER}/${REPO}/main/${FOLDER}/${encodeURIComponent(file.name)}`;
+    if(!CSV_FILES.length) throw new Error('No hay partidos cargados todavía.\nAgregá los nombres de los CSV en la lista CSV_FILES del HTML.');
+
+    const promises=CSV_FILES.map(async filename=>{
+      const meta=parseMatchKey(filename);
+      const rawUrl=`https://raw.githubusercontent.com/${OWNER}/${REPO}/main/${FOLDER}/${encodeURIComponent(filename)}`;
       const resp=await fetch(rawUrl);
       if(!resp.ok) return null;
       const text=await resp.text();
       const data=parseCSV(text);
       return {
-        key: file.name.replace('.csv',''),
-        filename: file.name,
+        key: filename.replace('.csv',''),
+        filename: filename,
         day: meta.day,
         rival: meta.rival,
         casiScore: meta.casiScore,
