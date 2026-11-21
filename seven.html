@@ -1198,10 +1198,8 @@ function render(){
 
     if(!MATCHES.length) throw new Error('No se pudieron cargar datos de los partidos');
 
-    MATCHES.sort((a,b)=>{
-      if(a.day!==b.day) return a.day==='sab'?-1:1;
-      return a.rival.localeCompare(b.rival);
-    });
+    // El orden de MATCHES respeta el orden de CSV_FILES
+    // ⚠️ Cargar CSV_FILES en orden cronológico (más viejo primero)
 
     buildDropdown();
     buildDayTabs();
