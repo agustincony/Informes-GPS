@@ -489,8 +489,8 @@ function computeCargaPct(p){
   return (pMins+pRhie+pCont+pDist)/4;
 }
 function cargaColor(pct){
-  if(pct>90)  return{bg:'#C62828',key:'alerta'};
-  if(pct>=80) return{bg:'#C47000',key:'precaucion'};
+  if(pct>85)  return{bg:'#C62828',key:'alerta'};
+  if(pct>=70) return{bg:'#C47000',key:'precaucion'};
   return{bg:'#2E7D32',key:'optimo'};
 }
 function setCargaFilter(key){
