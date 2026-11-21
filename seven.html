@@ -577,14 +577,11 @@ function sprintChart(data){
   const toggle=`<div class="chart-toggle">
     <div class="ctab ${sprintMode==='dist'?'active':''}" onclick="sprintMode='dist';render()">Distancia</div>
     <div class="ctab ${sprintMode==='count'?'active':''}" onclick="sprintMode='count';render()">Nº sprints</div>
-    <div class="ctab ${sprintMode==='exp'?'active':''}" onclick="sprintMode='exp';render()">+80% dist.</div>
   </div>`;
-  if(sprintMode==='dist'){
-    return toggle+svgBars({data:byGroup(data,'dt25'),barKey:'dt25',barLabel:'>25 km/h (m)',fullN:data.length});
-  } else if(sprintMode==='count'){
+  if(sprintMode==='count'){
     return toggle+svgBars({data:byGroup(data,'sprint_count'),barKey:'sprint_count',barLabel:'Nº sprints',barFormat:v=>Math.round(v)+'',fullN:data.length});
   } else {
-    return toggle+svgBars({data:byGroup(data,'dist_exp'),barKey:'dist_exp',barLabel:'>80% V.Máx (m)',fullN:data.length});
+    return toggle+svgBars({data:byGroup(data,'dt25'),barKey:'dt25',barLabel:'>25 km/h (m)',fullN:data.length});
   }
 }
 
@@ -1092,12 +1089,6 @@ function render(){
     //   'dom-Alumni-7-21.csv'
     const CSV_FILES = [
       'sab-Belgrano-14-10.csv',
-      'sab-Biei-20-11.csv',
-      'sab-Regatas-37-9.csv',
-      'dom-Cuba-27-19.csv',
-      'dom-Los Tilos-22-12.csv',
-      'dom-Matreros-12-8.csv',
-      'dom-Plaza-31-25.csv',
     ];
     // ───────────────────────────────────────────────────────────────────────
 
