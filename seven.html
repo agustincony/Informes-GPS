@@ -421,12 +421,6 @@ const TRIES_BY_MATCH = {
     'Repetto':  1,
     'Roger':    1,
   },
-  'sab-Matreros-22-5': {
-    'Repetto':     1,
-    'Phelan':      1,
-    'Castillo N.': 1,
-    'Belaga':      1,
-  },
 };
 
 function getTriesForView(view){
@@ -511,7 +505,7 @@ function buildSemaforoCarga(data){
     if(!matches.length) return '';
     const byName={};
     matches.forEach((match,idx)=>{
-      const weight=1.0+idx*0.25;
+      const weight=1.0+idx*0.10;
       match.data.forEach(p=>{
         const pct=computeCargaPct(p);
         if(!byName[p.name]) byName[p.name]={wSum:0,wTotal:0};
@@ -1169,8 +1163,7 @@ function render(){
     //   'dom-Alumni-7-21.csv'
     const CSV_FILES = [
       'sab-Ciudad-53-0.csv',
-      'sab-Tigre-45-0.csv',
-      'sab-Matreros-22-5.csv',    
+      'sab-Tigre-45-0.csv',  
     ];
     // ───────────────────────────────────────────────────────────────────────
 
