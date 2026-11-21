@@ -146,8 +146,9 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
   <div>
     <div class="flt-lbl">ORDENAR</div>
     <div class="prow" id="sort-tabs">
-      <div class="ptab active" onclick="setSortMode('group',this)">Por puesto</div>
+      <div class="ptab active" onclick="setSortMode('mins',this)">Por minutos</div>
       <div class="ptab" onclick="setSortMode('perf',this)">Por rendimiento</div>
+      <div class="ptab" onclick="setSortMode('name',this)">Por nombre</div>
     </div>
   </div>
 </div>
@@ -208,7 +209,7 @@ const LIMITS = {
 // ─── ESTADO ────────────────────────────────────────────────────────────────
 let MATCHES = [];
 let activeView = 'total';
-let sortMode = 'group';
+let sortMode = 'mins';
 let velMode = 'abs';
 let distMode = 'total';    // 'total' | 'mpm'
 let hsrMode = 'abs';       // 'abs' | 'pct'
@@ -249,6 +250,8 @@ const POS_ORDER={'Seven':0};
 function byGroup(arr,key,asc=false){
   return [...arr].sort((a,b)=>{
     if(sortMode==='perf') return asc?a[key]-b[key]:b[key]-a[key];
+    if(sortMode==='mins') return b.total_mins-a.total_mins;
+    if(sortMode==='name') return apellido(a.name).localeCompare(apellido(b.name));
     if(a.group_order!==b.group_order) return a.group_order-b.group_order;
     const pa=POS_ORDER[a.position]??99, pb=POS_ORDER[b.position]??99;
     if(pa!==pb) return pa-pb;
