@@ -91,6 +91,11 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
 .eru-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fbc);font-size:11px;font-weight:900;color:#fff;flex-shrink:0}
 .eru-name{font-family:var(--fbc);font-size:13px;font-weight:600;color:var(--fg);flex:1}
 .eru-pos{font-family:var(--fbc);font-size:10px;color:#aaa}
+.sc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 8px;padding:2px 0}
+.sc-cell{display:flex;flex-direction:column;align-items:center;gap:5px}
+.sc-circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.18)}
+.sc-pct{font-family:var(--fbc);font-size:12px;font-weight:900;color:#fff;line-height:1}
+.sc-name{font-family:var(--fbc);font-size:10px;font-weight:600;color:var(--fg);text-align:center;line-height:1.2;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* FIFA card */
 .fut-selector-wrap{padding:0 0 10px;display:flex;flex-direction:column;gap:6px}
@@ -208,6 +213,9 @@ const LIMITS = {
 
 // ─── ESTADO ────────────────────────────────────────────────────────────────
 let MATCHES = [];
+let cargaFilter = null; // null=todos, 'alerta', 'precaucion', 'optimo'
+const CARGA_LIMITS = { mins:14, rhie:10, contacts:18, distExp:424 };
+const CARGA_OVERRIDES = { 'Ignacio Torrado':{ rhie:7, distExp:301.07 } };
 let activeView = 'total';
 let sortMode = 'mins';
 let velMode = 'abs';
@@ -432,6 +440,69 @@ function buildERU(data){
       <div class="eru-name">${p.name}</div>
       <div class="eru-pos">${p.position}</div>
     </div>`).join('')+'</div>';
+}
+
+// ─── SEMÁFORO DE CARGA ──────────────────────────────────────────────────────────
+function computeCargaPct(p){
+  const ov=CARGA_OVERRIDES[p.name]||{};
+  const limRhie   =ov.rhie   ||CARGA_LIMITS.rhie;
+  const limDistExp=ov.distExp||CARGA_LIMITS.distExp;
+  const pMins =(p.total_mins/CARGA_LIMITS.mins)   *100;
+  const pRhie =(p.rhie      /limRhie)              *100;
+  const pCont =(p.contacts  /CARGA_LIMITS.contacts)*100;
+  const pDist =(p.dist_exp  /limDistExp)            *100;
+  return (pMins+pRhie+pCont+pDist)/4;
+}
+function cargaColor(pct){
+  if(pct>90)  return{bg:'#C62828',key:'alerta'};
+  if(pct>=80) return{bg:'#C47000',key:'precaucion'};
+  return{bg:'#2E7D32',key:'optimo'};
+}
+function setCargaFilter(key){
+  cargaFilter=cargaFilter===key?null:key;
+  render();
+}
+function buildSemaforoCarga(data){
+  if(!data.length) return '';
+  let playerScores;
+  if(activeView==='total'||activeView==='sab'||activeView==='dom'){
+    const matches=activeView==='total'?MATCHES:MATCHES.filter(m=>m.day===activeView);
+    if(!matches.length) return '';
+    const byName={};
+    matches.forEach((match,idx)=>{
+      const weight=1.0+idx*0.25;
+      match.data.forEach(p=>{
+        const pct=computeCargaPct(p);
+        if(!byName[p.name]) byName[p.name]={wSum:0,wTotal:0};
+        byName[p.name].wSum  +=pct*weight;
+        byName[p.name].wTotal+=weight;
+      });
+    });
+    playerScores=Object.entries(byName).map(([name,v])=>({name,pct:v.wSum/v.wTotal}));
+  } else {
+    playerScores=data.map(p=>({name:p.name,pct:computeCargaPct(p)}));
+  }
+  playerScores.sort((a,b)=>b.pct-a.pct);
+  const counts={alerta:0,precaucion:0,optimo:0};
+  playerScores.forEach(ps=>counts[cargaColor(ps.pct).key]++);
+  const filtered=cargaFilter?playerScores.filter(ps=>cargaColor(ps.pct).key===cargaFilter):playerScores;
+  const btnDefs=[
+    {key:'alerta',    emoji:'\ud83d\udd34',label:'Alerta',    bg:'#C62828'},
+    {key:'precaucion',emoji:'\ud83d\udfe1',label:'Precauci\u00f3n',bg:'#C47000'},
+    {key:'optimo',    emoji:'\ud83d\udfe2',label:'\u00d3ptimo',    bg:'#2E7D32'},
+  ];
+  const toggles=btnDefs.map(b=>{
+    const isActive=cargaFilter===b.key;
+    const st=isActive?'background:'+b.bg+';border-color:'+b.bg+';color:#fff':'--cp:'+b.bg;
+    return '<div class="ctab'+(isActive?' active':'')+'" style="'+st+'" onclick="setCargaFilter(\''+b.key+'\')">'+b.emoji+' '+b.label+' <span style="font-size:9px;opacity:.8">('+counts[b.key]+')</span></div>';
+  }).join('');
+  const gridItems=filtered.map(ps=>{
+    const pct=Math.round(ps.pct);
+    const c=cargaColor(ps.pct);
+    return '<div class="sc-cell"><div class="sc-circle" style="background:'+c.bg+'"><span class="sc-pct">'+pct+'%</span></div><div class="sc-name">'+fmtName(ps.name)+'</div></div>';
+  }).join('');
+  const emptyMsg=filtered.length===0?'<div style="font-family:var(--fbc);font-size:12px;color:#aaa;text-align:center;padding:16px;grid-column:1/-1">Sin jugadores</div>':'';
+  return '<div class="chart-toggle" style="margin-bottom:10px">'+toggles+'</div><div class="sc-grid">'+(gridItems||emptyMsg)+'</div>';
 }
 
 // ─── CHART FUNCTIONS ───────────────────────────────────────────────────────
@@ -1022,6 +1093,9 @@ function render(){
     return;
   }
 
+  const cargaHtml=buildSemaforoCarga(data);
+  if(cargaHtml) h+=`<div class="sec"><div class="sec-ttl">🚦 SEMÁFORO DE CARGA</div>${cargaHtml}</div>`;
+
   const eruHtml=buildERU(data);
   if(eruHtml) h+=`<div class="sec"><div class="sec-ttl">🚦 ERU · SEMÁFORO</div>${eruHtml}</div>`;
 
@@ -1059,9 +1133,6 @@ function render(){
     //   'dom-Alumni-7-21.csv'
     const CSV_FILES = [
       'sab-Belgrano-14-10.csv',
-      'sab-Biei-20-11.csv',
-      'dom-Plaza-31-25.csv',
-
     ];
     // ───────────────────────────────────────────────────────────────────────
 
