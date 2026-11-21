@@ -403,6 +403,51 @@ function getDataset(){
   return match?match.data:[];
 }
 
+// ─── MEDALLERO DE TRIES ─────────────────────────────────────────────────────────
+const TRIES_DATA = [
+  {name:'Castillo, Nicanor', tries:3},
+  {name:'Roger, Eliseo',     tries:3},
+  {name:'Belleze, Agustín',  tries:2},
+  {name:'Lavayen, Alejo',    tries:2},
+  {name:'Barone, Facundo',   tries:1},
+  {name:'Belaga, Benjamin',  tries:1},
+  {name:'Castillo, Ramón',   tries:1},
+  {name:'David, Santiago',   tries:1},
+  {name:'Phelan, Tomas',     tries:1},
+  {name:'Repetto, Pedro',    tries:1},
+];
+
+function buildTriesMedallero(){
+  if(!TRIES_DATA.length) return '';
+  const medals=['🥇','🥈','🥉'];
+  const cls=['gold','silver','bronze'];
+  // top 3 → podio
+  const top3=TRIES_DATA.slice(0,3);
+  const rest=TRIES_DATA.slice(3);
+  let h='<div class="podium">';
+  top3.forEach((p,i)=>{
+    const pct=Math.round((p.tries/top3[0].tries)*100);
+    h+=`<div class="pod ${cls[i]}">
+      <div class="pod-medal">${medals[i]}</div>
+      <div class="pod-info"><div class="pod-name">${p.name}</div><div class="pod-sub">tries</div></div>
+      <div class="pod-nums"><div class="pod-vel">${p.tries}</div></div>
+      <div class="pod-bar"><div class="pod-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  });
+  h+='</div>';
+  if(rest.length){
+    h+='<div class="sc-grid" style="margin-top:7px">';
+    rest.forEach(p=>{
+      h+=`<div class="sc-cell">
+        <div class="kpi-lbl">${p.name.split(',')[0]}</div>
+        <div class="kpi-v">${p.tries}<span class="kpi-u"> T</span></div>
+      </div>`;
+    });
+    h+='</div>';
+  }
+  return h;
+}
+
 // ─── SEMÁFORO DE CARGA ──────────────────────────────────────────────────────────
 function computeCargaPct(p){
   const ov=CARGA_OVERRIDES[p.name]||{};
@@ -1053,7 +1098,7 @@ function render(){
   const cargaHtml=buildSemaforoCarga(data);
   if(cargaHtml) h+=`<div class="sec"><div class="sec-ttl">🚦 SEMÁFORO DE CARGA</div>${cargaHtml}</div>`;
 
-
+  h+=`<div class="sec"><div class="sec-ttl">🏉 TRIES · MEDALLERO</div>${buildTriesMedallero()}</div>`;
 
   h+=`<div class="sec"><div class="sec-ttl">🏃 VELOCIDAD MÁX · TOP 3</div><div class="podium">${velPodium(data)}</div></div>`;
   h+=`<div class="sec"><div class="sec-ttl">⏱ MINUTOS JUGADOS</div>${minChart(data)}</div>`;
