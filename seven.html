@@ -86,16 +86,10 @@ body{background:var(--bg);color:var(--fg);font-family:var(--fb);max-width:480px;
 ::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
 
 /* ERU semaphore */
-.eru-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--bord)}
-.eru-row:last-child{border-bottom:none}
-.eru-dot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--fbc);font-size:11px;font-weight:900;color:#fff;flex-shrink:0}
-.eru-name{font-family:var(--fbc);font-size:13px;font-weight:600;color:var(--fg);flex:1}
-.eru-pos{font-family:var(--fbc);font-size:10px;color:#aaa}
-.sc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 8px;padding:2px 0}
-.sc-cell{display:flex;flex-direction:column;align-items:center;gap:5px}
-.sc-circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.18)}
-.sc-pct{font-family:var(--fbc);font-size:12px;font-weight:900;color:#fff;line-height:1}
-.sc-name{font-family:var(--fbc);font-size:10px;font-weight:600;color:var(--fg);text-align:center;line-height:1.2;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.sc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px 6px;padding:2px 0}
+.sc-cell{display:flex;align-items:center;justify-content:center;border-radius:7px;border-width:2px;border-style:solid;padding:7px 5px;min-height:34px}
+.sc-name{font-family:var(--fbc);font-size:13px;font-weight:700;color:var(--fg);text-align:center;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%}
 
 /* FIFA card */
 .fut-selector-wrap{padding:0 0 10px;display:flex;flex-direction:column;gap:6px}
@@ -213,7 +207,7 @@ const LIMITS = {
 
 // ─── ESTADO ────────────────────────────────────────────────────────────────
 let MATCHES = [];
-let cargaFilter = null; // null=todos, 'alerta', 'precaucion', 'optimo'
+let cargaFilter = 'alerta'; // null=todos, 'alerta', 'precaucion', 'optimo'
 const CARGA_LIMITS = { mins:14, rhie:10, contacts:18, distExp:424 };
 const CARGA_OVERRIDES = { 'Ignacio Torrado':{ rhie:7, distExp:301.07 } };
 let activeView = 'total';
@@ -409,39 +403,6 @@ function getDataset(){
   return match?match.data:[];
 }
 
-// ─── ERU ───────────────────────────────────────────────────────────────────
-function computeERU(player){
-  const lim=LIMITS[player.name];
-  if(!lim) return null;
-  const norm=(val,limit)=>limit>0?Math.min(1,Math.max(0,val/limit)):0;
-  const eru=100*(
-    0.30*norm(player.dist_exp,lim.distExp)+
-    0.25*norm(player.pl_min,lim.plMin)+
-    0.20*norm(player.mts_min||player.avg_mpm,lim.mtsMin)+
-    0.15*norm(player.hsr_val||player.ai18,lim.hsr)+
-    0.10*norm(player.sprint_dist||player.dt25,Math.max(lim.sprintDist,1))
-  );
-  return Math.round(eru);
-}
-function eruColor(score){
-  if(score>=60) return '#2E7D32';
-  if(score>=30) return '#C47000';
-  return '#C62828';
-}
-function buildERU(data){
-  const rows=data
-    .map(p=>({p,eru:computeERU(p)}))
-    .filter(x=>x.eru!==null)
-    .sort((a,b)=>b.eru-a.eru);
-  if(!rows.length) return '';
-  return '<div>'+rows.map(({p,eru})=>`
-    <div class="eru-row">
-      <div class="eru-dot" style="background:${eruColor(eru)}">${eru}</div>
-      <div class="eru-name">${p.name}</div>
-      <div class="eru-pos">${p.position}</div>
-    </div>`).join('')+'</div>';
-}
-
 // ─── SEMÁFORO DE CARGA ──────────────────────────────────────────────────────────
 function computeCargaPct(p){
   const ov=CARGA_OVERRIDES[p.name]||{};
@@ -497,9 +458,8 @@ function buildSemaforoCarga(data){
     return '<div class="ctab'+(isActive?' active':'')+'" style="'+st+'" onclick="setCargaFilter(\''+b.key+'\')">'+b.emoji+' '+b.label+' <span style="font-size:9px;opacity:.8">('+counts[b.key]+')</span></div>';
   }).join('');
   const gridItems=filtered.map(ps=>{
-    const pct=Math.round(ps.pct);
     const c=cargaColor(ps.pct);
-    return '<div class="sc-cell"><div class="sc-circle" style="background:'+c.bg+'"><span class="sc-pct">'+pct+'%</span></div><div class="sc-name">'+fmtName(ps.name)+'</div></div>';
+    return '<div class="sc-cell" style="border-color:'+c.bg+';background:'+c.bg+'18"><span class="sc-name">'+fmtName(ps.name)+'</span></div>';
   }).join('');
   const emptyMsg=filtered.length===0?'<div style="font-family:var(--fbc);font-size:12px;color:#aaa;text-align:center;padding:16px;grid-column:1/-1">Sin jugadores</div>':'';
   return '<div class="chart-toggle" style="margin-bottom:10px">'+toggles+'</div><div class="sc-grid">'+(gridItems||emptyMsg)+'</div>';
@@ -1096,8 +1056,7 @@ function render(){
   const cargaHtml=buildSemaforoCarga(data);
   if(cargaHtml) h+=`<div class="sec"><div class="sec-ttl">🚦 SEMÁFORO DE CARGA</div>${cargaHtml}</div>`;
 
-  const eruHtml=buildERU(data);
-  if(eruHtml) h+=`<div class="sec"><div class="sec-ttl">🚦 ERU · SEMÁFORO</div>${eruHtml}</div>`;
+
 
   h+=`<div class="sec"><div class="sec-ttl">🏃 VELOCIDAD MÁX · TOP 3</div><div class="podium">${velPodium(data)}</div></div>`;
   h+=`<div class="sec"><div class="sec-ttl">⏱ MINUTOS JUGADOS</div>${minChart(data)}</div>`;
