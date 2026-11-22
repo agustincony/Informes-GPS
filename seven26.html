@@ -612,7 +612,7 @@ function svgBars({data,barKey,barLabel,barColor,dotsKey,dotsLabel,dotsColor,
 }
 
 function minChart(data){
-  const sorted=[...data].sort((a,b)=>b.total_mins-a.total_mins);
+  const sorted=byGroup(data,'total_mins');
   return svgBars({data:sorted,barKey:'total_mins',barLabel:'Minutos jugados',barFormat:v=>f(v,0),fullN:data.length});
 }
 
